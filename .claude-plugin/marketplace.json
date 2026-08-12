@@ -1,0 +1,11 @@
+{
+  "name": "claude-para-saude",
+  "owner": { "name": "Stefano Garzon" },
+  "plugins": [
+    {
+      "name": "claude-para-saude",
+      "source": ".",
+      "description": "Avaliação de conformidade de projetos de IA e LLM com dados de saúde no Brasil"
+    }
+  ]
+}
