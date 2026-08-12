@@ -47,6 +47,11 @@ O corpus passou por auditoria adversarial que rebaixou 21 severidades e eliminou
 5 gatilhos por dispararem em arquitetura lícita (decisão R6). Reinflar severidade
 desfaz esse trabalho e produz alarme falso em serviço conforme.
 
+> Quando **nenhum gatilho e nenhuma ficha** sustentarem o item, ele fica **sem
+> severidade**. Registre a lacuna, diga o que falta e não gradue. Atribuir
+> severidade onde não há base é inferir — e inferir severidade é exatamente o
+> que a R6 proíbe. Vale igualmente para `indeterminado`.
+
 ### 2. Nenhum texto de norma vem de memória
 
 Todo trecho entre aspas atribuído a norma sai do campo `Literal` devolvido por
@@ -187,7 +192,11 @@ e diga isso no cabeçalho do parecer.
 
 ## Fase 4 — parecer
 
-Escreva em `parecer-conformidade.md`. Estrutura fixa:
+Escreva em `saidas/<slug>/parecer-conformidade.md`, onde `<slug>` é o caso em
+kebab-case, derivado do projeto avaliado. Caminho relativo ao diretório de
+trabalho. Crie o diretório se não existir. Não escolha outro caminho.
+
+Estrutura fixa:
 
 ```markdown
 # Parecer de conformidade — <nome do projeto>
@@ -252,7 +261,11 @@ Formato de cada achado:
 
 ## Fase 5 — checklist
 
-Escreva em `checklist-conformidade.md`. Uma linha por diretriz aplicável das
+Escreva em `saidas/<slug>/checklist-conformidade.md`, com o mesmo `<slug>` do
+parecer. Caminho relativo ao diretório de trabalho. Crie o diretório se não
+existir. Não escolha outro caminho.
+
+Uma linha por diretriz aplicável das
 diretrizes carregadas — não só por achado. Diretriz cumprida também entra.
 
 | Status | Quando |
@@ -290,3 +303,4 @@ Recuse-se a entregar se qualquer resposta for "não":
 6. A vigência da 2.454 foi aplicada conforme R1?
 7. Assunto fora do corpus foi declarado como lacuna, sem opinião?
 8. O aviso de que não é parecer jurídico está no cabeçalho?
+9. Nenhum item sem gatilho nem ficha recebeu severidade?

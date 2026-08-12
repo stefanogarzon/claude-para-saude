@@ -1,13 +1,13 @@
 ---
 tipo: versao do corpus distribuido
 construido: 2026-08-12
-plugin_version: 0.1.0
+plugin_version: 0.1.1
 corpus_hash: e4a057377be5d004
 ---
 
 # Versao do corpus
 
-27 arquivos · 202 dispositivos citaveis · plugin v0.1.0.
+27 arquivos · 202 dispositivos citaveis · plugin v0.1.1.
 
 Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` neste repositorio — a fonte de verdade e o corpus editorial, e este diretorio e sobrescrito a cada build.
 
