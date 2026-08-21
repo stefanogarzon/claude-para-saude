@@ -101,7 +101,19 @@ def erro(msg, codigo=2):
     sys.exit(codigo)
 
 
+# Campos que NUNCA sao omitidos quando existem, qualquer que seja --campos.
+# `incerteza` marca ponto nao pacificado ou regra de origem estrangeira. Omiti-lo
+# entrega a regra crua sem a ressalva que a torna legivel — foi o que quase
+# aconteceu com SEC:anonimizacao.quase-identificadores, cujo `literal` e a lista
+# do Safe Harbor. Guardrail no codigo, nao no prompt: sobrevive a edicao da skill.
+CAMPOS_FORCADOS = ["incerteza"]
+
+
 def formatar(bid, reg, campos):
+    campos = list(campos)
+    for forcado in CAMPOS_FORCADOS:
+        if reg.get(forcado) and forcado not in campos:
+            campos.append(forcado)
     linhas = [f"## {bid}", f"_ficha: {reg['_ficha']}_", ""]
     conf = reg.get("confianca", "").strip()
     if conf and conf != CONFIANCA_CITAVEL:
@@ -169,7 +181,7 @@ def main():
     if args.json:
         saida = {
             "encontrados": [
-                dict({c: reg.get(c) for c in campos if reg.get(c)},
+                dict({c: reg.get(c) for c in campos + CAMPOS_FORCADOS if reg.get(c)},
                      id=bid, ficha=reg["_ficha"])
                 for bid, reg in achados
             ],

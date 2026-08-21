@@ -1,15 +1,15 @@
 ---
-tipo: versao do corpus distribuido
-construido: 2026-08-12
-plugin_version: 0.1.1
-corpus_hash: e4a057377be5d004
+tipo: versao do distribuivel
+construido: 2026-08-21
+plugin_version: 0.1.4
+dist_hash: 8337c264c8ef2ef7
 ---
 
-# Versao do corpus
+# Versao do distribuivel
 
-27 arquivos · 202 dispositivos citaveis · plugin v0.1.1.
+27 arquivos de corpus · 1 de skill · 202 dispositivos citaveis · plugin v0.1.4.
 
-Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` neste repositorio — a fonte de verdade e o corpus editorial, e este diretorio e sobrescrito a cada build.
+Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` nem `skills/` neste repositorio — a fonte de verdade e o corpus editorial e `plugin-src/`, e estes diretorios sao sobrescritos a cada build.
 
 | Arquivo | sha256 (16) |
 |---|---|
@@ -39,3 +39,4 @@ Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` neste rep
 | `fichas/10-civil-consumo-mci.md` | `beacd14305a21978` |
 | `fichas/11-seguranca-tecnica.md` | `b72194fc7e2b4a8d` |
 | `fichas/12-provedores-llm.md` | `1e5802dba19350c4` |
+| `skills/avaliar-conformidade/SKILL.md` | `9b9621a134478111` |

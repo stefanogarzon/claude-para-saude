@@ -43,6 +43,13 @@ ou do campo `Severidade` da ficha, com o qualificador de escopo quando houver
 (ex.: `bloqueante (inciso V)`). Nunca eleve, nunca infira, nunca arredonde para
 cima porque "parece grave".
 
+**Quando as duas existirem e divergirem, vale a do gatilho.** O gatilho é o
+instrumento específico: ele grada o dispositivo para um padrão observável
+concreto. A ficha é o **teto**, nunca o piso — a R6 já proíbe gatilho mais severo
+que a entrada que o sustenta. Caso concreto: `CEM:art78` é `bloqueante` na ficha
+e `risco` na linha de gatilho "ausência de evidência de orientação da equipe
+quanto ao sigilo"; o achado sai `risco`.
+
 O corpus passou por auditoria adversarial que rebaixou 21 severidades e eliminou
 5 gatilhos por dispararem em arquitetura lícita (decisão R6). Reinflar severidade
 desfaz esse trabalho e produz alarme falso em serviço conforme.
@@ -59,6 +66,10 @@ Todo trecho entre aspas atribuído a norma sai do campo `Literal` devolvido por
 `[texto não carregado]`. **Nunca reconstrua o dispositivo de memória**, nem
 parafraseie como se fosse transcrição.
 
+> Quando o achado tiver mais de uma base, cite o **literal do dispositivo que
+> decide** o ponto. Os demais entram como identificador em `Base.`, sem
+> transcrição. Nunca transcreva de memória o que não foi carregado.
+
 ### 3. Origem da evidência é obrigatória em todo achado
 
 Cada achado carrega uma origem, e a origem muda o que ele significa:
@@ -72,6 +83,26 @@ Cada achado carrega uma origem, e a origem muda o que ele significa:
 **Conformidade declarada não é conformidade.** Nunca marque `conforme-verificado`
 com base em prosa. Se o material de entrada é só descrição, o teto de todo item
 é `conforme-declarado`, e isso precisa estar dito no cabeçalho do parecer.
+
+> Origem e situação são eixos distintos. A **severidade** é o peso da norma e
+> vem do gatilho. A **situação** é se o padrão foi afirmado, e vem da origem:
+>
+> | Origem do achado | `Situação` |
+> |---|---|
+> | `observado`, ou `declarado` que afirma o padrão | `confirmado` |
+> | só `ausente` | `pergunta` |
+>
+> Um dispositivo `bloqueante` continua `bloqueante` mesmo quando ninguém sabe se
+> o serviço o descumpre — o que muda é que aquilo é **pergunta**, não
+> constatação. Achado com origem só `ausente` **nunca** é reportado como
+> violação.
+>
+> O pareamento com o checklist é **unidirecional**: todo achado com `Situação`
+> `pergunta` **tem de** aparecer como `indeterminado`. O inverso não é exigido —
+> o checklist **pode** trazer `indeterminado` sem achado correspondente, quando
+> registra falta de informação que não merece bloco próprio no parecer. O que
+> nunca se admite é o mesmo item sair `indeterminado` no checklist e como
+> violação no parecer.
 
 ### 4. Gatilho obriga a perguntar, não decide
 
@@ -121,10 +152,15 @@ Extraia do material e **confirme com o usuário antes de seguir**:
 | Modalidade | presencial · telemedicina · ambos (define R2) |
 | Estágio | ideia · protótipo · piloto · produção |
 | Fornecedor e região | qual provedor, qual endpoint, qual região |
+| Onde gravar | proponha `saidas/<slug>/`, com `<slug>` derivado do projeto em kebab-case, e confirme o caminho com o usuário junto do resto da triagem |
 
 Regras da triagem:
 
 - Campo que não puder ser extraído do material: **pergunte**. Não presuma.
+- O campo `Onde gravar` é **proposto pela skill e confirmado pelo usuário**, não
+  adivinhado. O diretório de trabalho pode não ser o repositório do projeto, e
+  frequentemente não é. Proponha o caminho, mostre-o por extenso e siga com o que
+  o usuário confirmar. As fases 4 e 5 gravam nesse caminho, e em nenhum outro.
 - Se o material é só prosa, registre-o: **todo achado terá origem `declarado`**,
   e o parecer diz isso na primeira linha.
 - Se há repositório, os achados de código são `observado`; os demais continuam
@@ -163,6 +199,38 @@ cobre — outra jurisdição, dispositivo médico, ANVISA/SaMD, EU AI Act —
 
 ## Fase 3 — varredura
 
+### Passo 0 — porta de aplicabilidade
+
+**Antes de percorrer o catálogo**, case o escopo declarado de cada arquivo de
+diretriz contra a triagem. O escopo está no cabeçalho de cada arquivo, no campo
+`tema:`:
+
+| Arquivo | Escopo declarado | Premissa que a triagem precisa satisfazer |
+|---|---|---|
+| `01-uso-clinico-de-llm` | uso clínico de LLM e de IA no atendimento | contato com paciente ou com decisão clínica |
+| `02-custodia-de-dados-de-saude` | custódia, guarda e compartilhamento de dado de paciente | há dado de paciente sob guarda |
+| `03-escolha-de-fornecedor-e-regiao` | fornecedor de IA **para uso com dado de paciente** | há dado de paciente indo ao fornecedor |
+| `04-seguranca-tecnica` | sistema que **trata dado de saúde** | há dado de saúde no sistema |
+| `05-responsabilidade-e-prova` | uso de IA **com dado de paciente** | há dado de paciente, ou ato médico apoiado por IA |
+| `06-desenvolvimento-de-software` | software que trata dado de paciente **ou integra LLM** | há código próprio tratando dado de paciente ou chamando LLM |
+| `08-desidentificacao` | desidentificação e risco de reidentificação | há alegação de anonimização ou pseudonimização |
+
+Gatilho sustentado **apenas** por arquivo cujo escopo a triagem afastou **não
+dispara**. Silêncio do material não supre premissa ausente: se a triagem
+confirmou "nenhum dado de paciente", o gatilho de `.env` versionado não vira
+pergunta bloqueante só porque ninguém falou do `.env`. Fazê-lo é disparar em
+arquitetura lícita, que é o que a R6 proíbe.
+
+O requisito que continue fazendo sentido como higiene técnica não desaparece:
+entra nas seções 5 e 6 do parecer **sem severidade**, pela regra 1, e a linha
+correspondente do checklist sai `nao-aplicavel` com a justificativa apontando
+para onde o requisito foi parar.
+
+Registre no parecer, em uma frase, quais premissas a triagem afastou e o que isso
+desligou. A ausência de achado bloqueante é resultado, e resultado se explica.
+
+### Passo 1 — percorrer os gatilhos
+
 Percorra os gatilhos das seções carregadas contra o material.
 
 **Com repositório.** Use `Grep` e `Glob` sobre os padrões observáveis das linhas
@@ -171,18 +239,31 @@ chamadas de API, `.env`, logging de payload, região de endpoint. Todo achado é
 `observado` e carrega arquivo e linha (que vão para o anexo técnico, não para o
 corpo do parecer).
 
-**Com prosa.** Percorra o mesmo catálogo, perguntando de cada gatilho se a
-descrição afirma, nega ou omite o padrão. Afirma → `declarado`. Omite →
-`ausente`, e vira pergunta.
+**Com prosa.** Percorra o mesmo catálogo, perguntando de cada gatilho **que passou
+pelo passo 0** se a descrição afirma, nega ou omite o padrão. Afirma →
+`declarado`. Nega → não há achado. Omite → `ausente`, e vira pergunta.
 
-Para cada achado, carregue o dispositivo:
+Carregue os dispositivos em **duas etapas**. Pedir tudo de uma vez estoura o
+limite de saída de ferramenta: `aplicacao` é a maior parte do volume e é
+redundante com a diretriz na maioria dos casos.
+
+**Etapa 1 — triagem ampla.** Sobre todos os candidatos, para decidir o que entra
+no parecer e com que peso:
 
 ```
-python3 ${CLAUDE_PLUGIN_ROOT}/ferramentas/citar.py --campos literal,fonte,severidade,aplicacao <ID> [<ID>...]
+python3 ${CLAUDE_PLUGIN_ROOT}/ferramentas/citar.py --campos ementa,severidade <ID> [<ID>...]
 ```
 
-Peça vários ids numa chamada só. Se o script devolver `NAO ENCONTRADO` ou
-`BLOQUEADO`, **aplique a regra 2** — cite o id, não escreva o texto.
+**Etapa 2 — literal.** Só para os que forem de fato citados, que são muito menos:
+
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/ferramentas/citar.py --campos literal,fonte <ID> [<ID>...]
+```
+
+Peça vários ids numa chamada só, em cada etapa. Some `aplicacao` **apenas** quando
+a diretriz não resolver o ponto — não por padrão. Se o script devolver
+`NAO ENCONTRADO` ou `BLOQUEADO`, **aplique a regra 2** — cite o id, não escreva o
+texto.
 
 Se `python3` não estiver disponível, opere em modo degradado: cite os
 identificadores, escreva `[texto não carregado — Python indisponível]` em todos,
@@ -192,9 +273,9 @@ e diga isso no cabeçalho do parecer.
 
 ## Fase 4 — parecer
 
-Escreva em `saidas/<slug>/parecer-conformidade.md`, onde `<slug>` é o caso em
-kebab-case, derivado do projeto avaliado. Caminho relativo ao diretório de
-trabalho. Crie o diretório se não existir. Não escolha outro caminho.
+Escreva o parecer em `parecer-conformidade.md`, **dentro do caminho confirmado no
+campo `Onde gravar` da triagem**. Crie o diretório se não existir. Não escolha
+outro caminho, e não invente um se o usuário não confirmou — volte e confirme.
 
 Estrutura fixa:
 
@@ -214,10 +295,19 @@ Estrutura fixa:
 Quadro de triagem confirmado. Três a cinco linhas.
 
 ## 2. Onde ele morde
-Achados `bloqueante`, um bloco cada, ordenados por severidade.
+Achados `bloqueante`, um bloco cada. Separados em dois, cada um com contagem própria:
+
+#### 2a. Violações e pontos confirmados
+Achados com `Situação` `confirmado`. Contagem própria na abertura do bloco.
+
+#### 2b. Perguntas bloqueantes — resposta errada põe o serviço em desconformidade
+Achados com `Situação` `pergunta`. Contagem própria na abertura do bloco.
 
 ## 3. Pontos de exposição
-Achados `risco`.
+Achados `risco`, na mesma separação:
+
+#### 3a. Violações e pontos confirmados
+#### 3b. Perguntas de risco — resposta errada expõe o serviço
 
 ## 4. O que perguntar ao fornecedor
 Consolidado, em forma de pergunta direta e respondível.
@@ -227,24 +317,33 @@ Consolidado, em forma de requisito verificável.
 
 ## 6. O que registrar
 Consentimento, prontuário, trilha de auditoria, contrato. Classes A/B/C da R4.
+Subdivisão, se houver, em `####` — nunca `###`.
 
 ## 7. Fora do escopo
 O que a skill não avaliou, e por quê.
 
 ## 8. Escalar
 Itens que caíram em `Escalar se`. Não decididos, com o destinatário.
+Subdivisão, se houver, em `####` — nunca `###`.
 
 ## Anexo — evidência técnica
 Arquivo, linha e trecho de cada achado `observado`. Só aqui.
 ```
 
+**Regra de níveis de título, e ela é verificável por script.** Dentro das seções
+2 e 3, `###` é **exclusivamente** título de achado, sempre numerado `N.N`. Tudo o
+mais que precise de subtítulo — os divisores `2a`/`2b`/`3a`/`3b`, e qualquer
+subdivisão dentro das seções 1 e 4 a 8 — é `####`. Um `### 6.1` ou `### 8.1`
+quebra a contagem automática tanto quanto um divisor promovido a `###`.
+
 Formato de cada achado:
 
 ```markdown
-### <título em linguagem de conformidade, não de código>
+### <N.N> <título em linguagem de conformidade, não de código>
 
 **Severidade.** `<copiada literal>`
 **Origem.** `observado` — `app/prontuario.py:142` · ou `declarado` · ou `ausente`
+**Situação.** `confirmado` · ou `pergunta` — pela tabela da regra 3
 **Base.** `CFM-2454-2026:art4` · `CEM:art87`
 **Leitura adotada.** <só se a diretriz trouxer; reproduza literal>
 
@@ -257,13 +356,17 @@ Formato de cada achado:
 **Ação.** exigir da TI: … · perguntar ao fornecedor: … · registrar: …
 ```
 
+O título é **numerado**, `N.N`, com `N` igual ao número da seção e a sequência
+contínua dentro dela, atravessando os divisores `a` e `b`. A numeração é
+funcional: as seções 4 a 8 fazem referência cruzada a achado ("ver 2.5"), e sem
+número a referência não resolve.
+
 ---
 
 ## Fase 5 — checklist
 
-Escreva em `saidas/<slug>/checklist-conformidade.md`, com o mesmo `<slug>` do
-parecer. Caminho relativo ao diretório de trabalho. Crie o diretório se não
-existir. Não escolha outro caminho.
+Escreva o checklist em `checklist-conformidade.md`, **no mesmo caminho confirmado
+do parecer**. Crie o diretório se não existir. Não escolha outro caminho.
 
 Uma linha por diretriz aplicável das
 diretrizes carregadas — não só por achado. Diretriz cumprida também entra.
@@ -276,14 +379,35 @@ diretrizes carregadas — não só por achado. Diretriz cumprida também entra.
 | `nao-aplicavel` | fora do caso, **com justificativa na linha** |
 | `indeterminado` | falta informação; traz a pergunta que resolveria |
 
+O pareamento com o parecer é **unidirecional** (regra 3). Todo achado com
+`Situação` `pergunta` tem de aparecer aqui como `indeterminado`. O contrário não
+é exigido: uma linha `indeterminado` sem achado correspondente é legítima quando
+falta informação que não merece bloco próprio no parecer — traga nela a pergunta
+que a resolveria. O que nunca se admite é o mesmo item sair `indeterminado` aqui
+e como violação no parecer.
+
 ```markdown
 | Diretriz | Exigência | Status | Origem | Base | Próximo passo |
 |---|---|---|---|---|---|
 | `uso-clinico:D3` | registro do uso de IA no prontuário | `lacuna` | `observado` | `CFM-2454-2026:art4` | exigir campo próprio e versionamento do modelo |
 ```
 
-Fecha com a contagem: quantos `lacuna` bloqueantes, quantos de risco, quantos
-`indeterminado`. E com a linha de validade:
+Fecha com a contagem, **em tabela e neste formato exato** — é o que o
+`validar_parecer.py` lê para conferir contra as linhas reais da tabela acima.
+Lista com marcadores não é lida, e a conferência passa em silêncio:
+
+```markdown
+| Status | Contagem |
+|---|---|
+| `conforme-verificado` | 0 |
+| `conforme-declarado` | 3 |
+| `lacuna` | 0 |
+| `nao-aplicavel` | 57 |
+| `indeterminado` | 3 |
+```
+
+Abaixo da tabela, em prosa: quantos dos `lacuna` são bloqueantes e quantos de
+risco. E a linha de validade:
 
 > Corpus verificado em <data>. Alterações normativas posteriores não estão
 > refletidas. Fornecedor de LLM: reverificar antes de qualquer decisão — a ficha
@@ -304,3 +428,12 @@ Recuse-se a entregar se qualquer resposta for "não":
 7. Assunto fora do corpus foi declarado como lacuna, sem opinião?
 8. O aviso de que não é parecer jurídico está no cabeçalho?
 9. Nenhum item sem gatilho nem ficha recebeu severidade?
+10. Todo achado tem `Situação`, e nenhum com origem só `ausente` está como
+    `confirmado`?
+11. Onde gatilho e ficha divergiram na severidade, prevaleceu a do gatilho?
+12. Todo gatilho que disparou passou pela porta de aplicabilidade do passo 0 da
+    fase 3, e o parecer diz quais premissas a triagem afastou?
+13. Dentro das seções 2 e 3, todo `###` é achado numerado `N.N` — e nada mais
+    usa `###` no documento inteiro?
+14. A contagem do checklist está em tabela, no formato da fase 5, e bate com as
+    linhas reais?
