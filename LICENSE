@@ -1,0 +1,63 @@
+# Licenças — claude-para-saude
+
+Este pacote tem duas naturezas, e cada uma tem a sua licença.
+
+## Código — MIT
+
+Aplica-se a `ferramentas/citar.py` e a qualquer outro código executável
+distribuído neste pacote.
+
+    Copyright (c) 2026 Stefano Garzon
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in
+    all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+## Corpus e skill — CC BY-SA 4.0
+
+Aplica-se a `corpus/` (fichas, diretrizes, decisões) e a
+`skills/avaliar-conformidade/SKILL.md`.
+
+Creative Commons Atribuição-CompartilhaIgual 4.0 Internacional.
+Texto integral: https://creativecommons.org/licenses/by-sa/4.0/deed.pt-br
+
+Em resumo: você pode copiar, redistribuir, adaptar e usar comercialmente, desde
+que **dê o crédito** e **licencie o derivado sob a mesma licença**. Quem melhorar
+o corpus devolve a melhoria à comunidade.
+
+### O que não é abrangido pelo direito autoral
+
+O texto de lei, decreto, resolução e demais atos oficiais é de domínio público
+(Lei 9.610/1998, art. 8º, IV). A licença acima **não** se estende a esses textos,
+que qualquer um pode reproduzir livremente.
+
+O que é obra, e o que a licença cobre, é o trabalho editorial em cima deles: a
+seleção dos 202 dispositivos, o recorte de cada ficha, a gradação de severidade,
+as diretrizes derivadas, as sete decisões e o catálogo de gatilhos.
+
+## Aviso, e ele não é formalidade
+
+Este material é **orientação profissional, não parecer jurídico**. Não substitui
+advogado, responsável técnico nem encarregado de dados.
+
+O corpus tem data de verificação, registrada em `corpus/VERSAO.md` e reproduzida
+no cabeçalho de todo parecer. Normas mudam e políticas de fornecedor de LLM mudam
+mais depressa ainda — a ficha de provedores tem meia-vida curta. **Confira a data
+antes de usar em decisão concreta.**
+
+Quem usa responde pelo uso. A licença não transfere responsabilidade profissional
+nem cria relação de consultoria.

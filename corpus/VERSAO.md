@@ -1,18 +1,23 @@
 ---
 tipo: versao do distribuivel
 construido: 2026-08-24
-plugin_version: 0.1.5
-dist_hash: 03bc2c733a7ace6f
+corpus_verificado_em: 2026-08-11
+plugin_version: 0.1.7
+dist_hash: 33973b21e41acffd
 ---
 
 # Versao do distribuivel
 
-27 arquivos de corpus · 1 de skill · 202 dispositivos citaveis · plugin v0.1.5.
+27 arquivos de corpus · 1 de skill · LICENSE e README · 202 dispositivos citaveis · plugin v0.1.7.
+
+**Norma conferida em fonte primaria em 2026-08-11**. Esta e a data que o parecer cita, e a unica que interessa a quem decide com ele. `construido:` acima e a data em que o artefato foi montado, e nao diz nada sobre a idade da norma.
 
 Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` nem `skills/` neste repositorio — a fonte de verdade e o corpus editorial e `plugin-src/`, e estes diretorios sao sobrescritos a cada build.
 
 | Arquivo | sha256 (16) |
 |---|---|
+| `LICENSE` | `17efe88a418d875c` |
+| `README.md` | `1c00e50b7a1a9932` |
 | `decisoes.md` | `43e324da85a22491` |
 | `diretrizes/00-decisoes.md` | `43e324da85a22491` |
 | `diretrizes/00-formato.md` | `feb991e5a99e4597` |
@@ -39,4 +44,4 @@ Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` nem `skil
 | `fichas/10-civil-consumo-mci.md` | `beacd14305a21978` |
 | `fichas/11-seguranca-tecnica.md` | `b72194fc7e2b4a8d` |
 | `fichas/12-provedores-llm.md` | `1e5802dba19350c4` |
-| `skills/avaliar-conformidade/SKILL.md` | `13e861738e0261a8` |
+| `skills/avaliar-conformidade/SKILL.md` | `a00ab028e12c794c` |

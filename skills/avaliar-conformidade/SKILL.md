@@ -13,11 +13,11 @@ description: >
   ChatGPT com dado de paciente?", "avalia esse projeto", "a clínica pode adotar
   isso?", "checagem de conformidade", "auditoria de IA", "a resolução do CFM
   atinge o meu sistema?", "estamos prontos para 26 de agosto?".
-license: Ver LICENSE do plugin
+license: código MIT · corpus e skill CC BY-SA 4.0 — ver LICENSE do plugin
 compatibility: >
   Requer Python 3 no PATH para o lookup de dispositivos. Sem Python, a skill
   opera em modo degradado e todo dispositivo sai sem texto literal.
-allowed-tools: Read Grep Glob Bash(python3 ${CLAUDE_PLUGIN_ROOT}/ferramentas/citar.py *)
+allowed-tools: Read, Grep, Glob, Write, Bash(python3 ${CLAUDE_PLUGIN_ROOT}/ferramentas/citar.py *)
 ---
 
 # Avaliação de conformidade — IA e LLM com dados de saúde
@@ -306,7 +306,8 @@ Estrutura fixa:
 ```markdown
 # Parecer de conformidade — <nome do projeto>
 
-**Base.** corpus claude-para-saude, verificado em <data do VERSAO.md>
+**Base.** corpus claude-para-saude, norma conferida em fonte primária em
+<`corpus_verificado_em` do VERSAO.md> · distribuível v<`plugin_version`>
 **Material avaliado.** <o que foi lido, item a item>
 **Alcance da verificação.** <observado | declarado | misto — e o que isso limita>
 **Data.** <hoje> · Res. CFM 2.454/2026: <vigente | vigora em 26/08/2026>
@@ -353,6 +354,18 @@ Subdivisão, se houver, em `####` — nunca `###`.
 ## Anexo — evidência técnica
 Arquivo, linha e trecho de cada achado `observado`. Só aqui.
 ```
+
+**A data que vai no cabeçalho é a da norma, nunca a do build.** Copie
+`corpus_verificado_em` do `VERSAO.md`. O campo `construido:` do mesmo arquivo é a
+data em que o artefato foi montado e **não diz nada sobre a idade da norma** —
+escrevê-lo como data de verificação faz o parecer afirmar que a norma foi
+conferida quando não foi, e o erro cresce a cada rebuild. Se o `VERSAO.md` não
+trouxer `corpus_verificado_em`, o distribuível é velho: diga isso no cabeçalho e
+não invente data.
+
+O leitor decide com base nessa linha — o aviso logo abaixo manda conferir a data
+de verificação antes de usar em decisão concreta. Data errada ali contamina tudo
+o que vem depois.
 
 **Regra de níveis de título, e ela é verificável por script.** Dentro das seções
 2 e 3, `###` é **exclusivamente** título de achado, sempre numerado `N.N`. Tudo o
@@ -475,3 +488,5 @@ Recuse-se a entregar se qualquer resposta for "não":
     — tire. Nenhuma linha de checklist vem de arquivo que a fase 2 não carregou.
 17. Todo `Base.` foi copiado do gatilho ou da diretriz que disparou o achado, sem
     id acrescentado para reforçar o argumento?
+18. A data do cabeçalho é o `corpus_verificado_em` do `VERSAO.md`, e não o
+    `construido:`? Confira os dois campos e escreva qual usou.
