@@ -22,7 +22,7 @@ com URL e data de verificação. A skill não escreve norma de memória.
 ## Instalação
 
 ```
-/plugin marketplace add <origem do marketplace>
+/plugin marketplace add stefanogarzon/claude-para-saude
 /plugin install claude-para-saude
 ```
 
