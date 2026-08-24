@@ -2,13 +2,13 @@
 tipo: versao do distribuivel
 construido: 2026-08-24
 corpus_verificado_em: 2026-08-11
-plugin_version: 0.1.8
-dist_hash: 42e326394872e1da
+plugin_version: 0.1.12
+dist_hash: c366c22ce0481df6
 ---
 
 # Versao do distribuivel
 
-27 arquivos de corpus · 1 de skill · LICENSE e README · 202 dispositivos citaveis · plugin v0.1.8.
+27 arquivos de corpus · 6 de skill · LICENSE e README · 202 dispositivos citaveis · plugin v0.1.12.
 
 **Norma conferida em fonte primaria em 2026-08-11**. Esta e a data que o parecer cita, e a unica que interessa a quem decide com ele. `construido:` acima e a data em que o artefato foi montado, e nao diz nada sobre a idade da norma.
 
@@ -17,7 +17,7 @@ Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` nem `skil
 | Arquivo | sha256 (16) |
 |---|---|
 | `LICENSE` | `17efe88a418d875c` |
-| `README.md` | `7e445f8d05c9592a` |
+| `README.md` | `56d208938ed11452` |
 | `decisoes.md` | `43e324da85a22491` |
 | `diretrizes/00-decisoes.md` | `43e324da85a22491` |
 | `diretrizes/00-formato.md` | `feb991e5a99e4597` |
@@ -30,6 +30,11 @@ Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` nem `skil
 | `diretrizes/06-desenvolvimento-de-software.md` | `ef78f6cfa36a6d7e` |
 | `diretrizes/07-gatilhos-de-auditoria.md` | `30958357b7f760a1` |
 | `diretrizes/08-desidentificacao.md` | `0932700a19c4368b` |
+| `ferramentas/citar.py` | `c75edfa75a30041d` |
+| `ferramentas/diretriz.py` | `3b8feb7426cffe42` |
+| `ferramentas/esquema_achados.py` | `f9e615405554a200` |
+| `ferramentas/render_parecer.py` | `cb626fd0f263165c` |
+| `ferramentas/validar_parecer.py` | `ffb8bfe130a868e2` |
 | `fichas/00-esquema.md` | `02592c59cefa8ad9` |
 | `fichas/00-indice.md` | `c1f6261c9363383e` |
 | `fichas/01-cfm-2454-2026.md` | `1dec48cbe6b1a388` |
@@ -44,4 +49,4 @@ Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` nem `skil
 | `fichas/10-civil-consumo-mci.md` | `beacd14305a21978` |
 | `fichas/11-seguranca-tecnica.md` | `b72194fc7e2b4a8d` |
 | `fichas/12-provedores-llm.md` | `1e5802dba19350c4` |
-| `skills/avaliar-conformidade/SKILL.md` | `a00ab028e12c794c` |
+| `skills/avaliar-conformidade/SKILL.md` | `96257e43dc3c4017` |

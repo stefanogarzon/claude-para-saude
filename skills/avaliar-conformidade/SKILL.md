@@ -15,9 +15,15 @@ description: >
   atinge o meu sistema?", "estamos prontos para 26 de agosto?".
 license: código MIT · corpus e skill CC BY-SA 4.0 — ver LICENSE do plugin
 compatibility: >
-  Requer Python 3 no PATH para o lookup de dispositivos. Sem Python, a skill
-  opera em modo degradado e todo dispositivo sai sem texto literal.
-allowed-tools: Read, Grep, Glob, Write, Bash(python3 ${CLAUDE_PLUGIN_ROOT}/ferramentas/citar.py *)
+  Requer Python 3 no PATH. As ferramentas fazem o lookup do corpus e renderizam
+  o parecer; sem Python a skill não produz documento.
+allowed-tools: Read, Grep, Glob, Write, Edit, Bash(python3:*)
+# `Bash(python3:*)` e nao o caminho completo do script: o matcher de
+# permissao NAO expande ${CLAUDE_PLUGIN_ROOT}. Com a variavel no padrao,
+# toda chamada fica aguardando aprovacao e, em modo nao interativo, nunca
+# roda — o modelo entao le as fichas inteiras com Read, que e o oposto do
+# que as ferramentas existem para fazer. Testado: `Bash(python3 ${...}/x.py *)`
+# trava; `Bash(python3:*)` passa.
 ---
 
 # Avaliação de conformidade — IA e LLM com dados de saúde
@@ -55,9 +61,6 @@ que a entrada que o sustenta. Caso concreto: `CEM:art78` é `bloqueante` na fich
 e `risco` na linha de gatilho "ausência de evidência de orientação da equipe
 quanto ao sigilo"; o achado sai `risco`.
 
-> Medido: o mesmo conjunto de bases saiu `bloqueante` num run e `risco` noutro,
-> porque um consultou a ficha tendo gatilho disponível. Gatilho primeiro, sempre.
-
 O corpus passou por auditoria adversarial que rebaixou 21 severidades e eliminou
 5 gatilhos por dispararem em arquitetura lícita (decisão R6). Reinflar severidade
 desfaz esse trabalho e produz alarme falso em serviço conforme.
@@ -67,25 +70,16 @@ desfaz esse trabalho e produz alarme falso em serviço conforme.
 > severidade onde não há base é inferir — e inferir severidade é exatamente o
 > que a R6 proíbe. Vale igualmente para `indeterminado`.
 
-### 2. Nenhum texto de norma vem de memória
+### 2. Você não escreve norma
 
-Todo trecho entre aspas atribuído a norma sai do campo `Literal` devolvido por
-`citar.py`. Se o script não devolveu, cite o identificador e escreva
-`[texto não carregado]`. **Nunca reconstrua o dispositivo de memória**, nem
-parafraseie como se fosse transcrição.
-
-> Quando o achado tiver mais de uma base, cite o **literal do dispositivo que
-> decide** o ponto. Os demais entram como identificador em `Base.`, sem
-> transcrição. Nunca transcreva de memória o que não foi carregado.
+Não há campo de texto de norma no `achados.json`. O literal, a URL e a data são
+injetados por `render_parecer.py` a partir do id em `decide`. Não transcreva, não
+parafraseie, não resuma dispositivo — nem no campo `texto`, que é a sua análise.
 
 > **O campo `Base.` se copia, como o literal.** Reproduza os ids do campo `Base`
 > do gatilho ou da diretriz que disparou o achado, e só eles. Não acrescente
 > dispositivo que reforça o argumento, não junte bases de dois gatilhos num
 > achado só, não complete a lista com o que "também se aplica".
->
-> Medido: o mesmo achado substantivo saiu com `art12, anexoII` num run e com
-> `art12, art13, anexoII` noutro. `Base.` é o que o parecer aponta como
-> autoridade — base montada a cada execução é autoridade que muda de tamanho.
 
 ### 3. Origem da evidência é obrigatória em todo achado
 
@@ -101,25 +95,20 @@ Cada achado carrega uma origem, e a origem muda o que ele significa:
 com base em prosa. Se o material de entrada é só descrição, o teto de todo item
 é `conforme-declarado`, e isso precisa estar dito no cabeçalho do parecer.
 
-> Origem e situação são eixos distintos. A **severidade** é o peso da norma e
-> vem do gatilho. A **situação** é se o padrão foi afirmado, e vem da origem:
->
-> | Origem do achado | `Situação` |
-> |---|---|
-> | `observado`, ou `declarado` que afirma o padrão | `confirmado` |
-> | só `ausente` | `pergunta` |
->
-> Um dispositivo `bloqueante` continua `bloqueante` mesmo quando ninguém sabe se
-> o serviço o descumpre — o que muda é que aquilo é **pergunta**, não
-> constatação. Achado com origem só `ausente` **nunca** é reportado como
-> violação.
->
-> O pareamento com o checklist é **unidirecional**: todo achado com `Situação`
-> `pergunta` **tem de** aparecer como `indeterminado`. O inverso não é exigido —
-> o checklist **pode** trazer `indeterminado` sem achado correspondente, quando
-> registra falta de informação que não merece bloco próprio no parecer. O que
-> nunca se admite é o mesmo item sair `indeterminado` no checklist e como
-> violação no parecer.
+Severidade e situação são eixos distintos. Severidade é o peso da norma e vem do
+gatilho. Situação é se o padrão foi afirmado, e vem da origem:
+
+| Origem | `situacao` |
+|---|---|
+| `observado`, ou `declarado` que afirma o padrão | `confirmado` |
+| só `ausente` | `pergunta` |
+
+Um dispositivo `bloqueante` continua `bloqueante` quando ninguém sabe se o
+serviço o descumpre — muda que aquilo é **pergunta**, não constatação. Achado com
+origem só `ausente` nunca é reportado como violação.
+
+Pareamento unidirecional: todo achado `pergunta` tem linha `indeterminado` no
+checklist. O inverso não é exigido.
 
 ### 4. Gatilho obriga a perguntar, não decide
 
@@ -190,303 +179,179 @@ Feche a fase com o quadro de triagem preenchido, confirmado pelo usuário.
 
 ## Fase 2 — roteamento
 
-Carregue apenas as diretrizes que a triagem indicou. Cada arquivo tem teto de
-3.000 palavras (~4k tokens); não carregue o que não se aplica.
+**A porta é uma só e fecha aqui.** Um arquivo entra quando cumpre as **duas**
+colunas: a condição da triagem *e* a premissa de escopo. Falhar qualquer uma o
+deixa de fora, e ficar de fora significa **não existir para o resto da
+execução** — sem gatilho, sem achado, sem linha de checklist. Aparece uma vez, em
+`premissas_afastadas`.
 
-**A porta é uma só, e fecha aqui.** Um arquivo entra quando cumpre as **duas**
-colunas da tabela abaixo: a condição da triagem *e* a premissa de escopo. Falhar
-qualquer uma o deixa de fora, e ficar de fora significa **não existir para o
-resto da execução** — não gera gatilho, não gera achado e **não gera nenhuma
-linha de checklist**. Ele aparece uma vez só, na frase de premissas afastadas da
-seção 1 do parecer.
-
-> Medido: a versão anterior filtrava duas vezes, aqui por condição e de novo no
-> passo 0 da fase 3 por premissa de escopo, sem dizer qual das duas mandava. No
-> caso sem dado de paciente, execuções diferentes da mesma entrada produziram
-> checklists de 19 e de 69 linhas — a de 69 enumerou como `nao-aplicavel` cada
-> diretriz dos arquivos afastados, e os dois achados reais ficaram no meio de 60
-> linhas de ruído. Achado nenhum apareceu nas três execuções.
-
-| Carregue | Condição vinda da triagem | **E** a premissa de escopo do arquivo |
+| Arquivo | Condição da triagem | **E** premissa de escopo |
 |---|---|---|
 | `07-gatilhos-de-auditoria.md` | sempre | — |
-| `01-uso-clinico-de-llm.md` | IA em contato com paciente ou com decisão clínica | contato com paciente ou com decisão clínica |
-| `02-custodia-de-dados-de-saude.md` | há guarda, prazo, compartilhamento ou prontuário | há dado de paciente sob guarda |
-| `03-escolha-de-fornecedor-e-regiao.md` | há provedor externo, contrato ou tráfego fora do Brasil | há dado de paciente indo ao fornecedor |
-| `04-seguranca-tecnica.md` | há repositório, infraestrutura, log, credencial ou incidente | há dado de saúde no sistema |
-| `05-responsabilidade-e-prova.md` | a pergunta envolve quem responde, ou prova de diligência | há dado de paciente, ou ato médico apoiado por IA |
-| `06-desenvolvimento-de-software.md` | há código próprio sendo escrito | há código próprio tratando dado de paciente **ou chamando LLM** |
-| `08-desidentificacao.md` | há alegação de anonimização, pseudonimização ou uso secundário | há alegação de anonimização ou pseudonimização |
+| `01-uso-clinico-de-llm` | contato com paciente ou decisão clínica | idem |
+| `02-custodia-de-dados-de-saude` | guarda, prazo, compartilhamento, prontuário | há dado de paciente sob guarda |
+| `03-escolha-de-fornecedor-e-regiao` | provedor externo, contrato, tráfego fora do Brasil | há dado de paciente indo ao fornecedor |
+| `04-seguranca-tecnica` | repositório, infra, log, credencial, incidente | há dado de saúde no sistema |
+| `05-responsabilidade-e-prova` | quem responde, prova de diligência | há dado de paciente, ou ato médico apoiado por IA |
+| `06-desenvolvimento-de-software` | código próprio | código tratando dado de paciente **ou chamando LLM** |
+| `08-desidentificacao` | alegação de anonimização, pseudonimização, uso secundário | idem |
 
-A premissa de escopo é o campo `tema:` do cabeçalho de cada arquivo, transcrito.
-Silêncio do material não supre premissa ausente: se a triagem confirmou "nenhum
-dado de paciente", `04-seguranca-tecnica` fica de fora, e o gatilho de `.env`
-versionado **não vira pergunta bloqueante** só porque ninguém falou do `.env`.
-Fazê-lo é disparar em arquitetura lícita, que é o que a R6 proíbe.
+**Carregue apenas `07-gatilhos-de-auditoria.md`.** Os demais arquivos não são
+lidos inteiros: a coluna decide quais ficam *elegíveis*, e os blocos deles são
+buscados um a um na fase 3, depois que um gatilho dispara.
 
-Repare no `06`: a premissa é alternativa. Software que **integra LLM** entra
-mesmo sem dado de paciente — é por essa porta que os gatilhos de OWASP e de
-comportamento do modelo continuam valendo num projeto sem paciente nenhum.
+Silêncio do material não supre premissa ausente. Se a triagem confirmou "nenhum
+dado de paciente", `04-seguranca-tecnica` fica de fora e o gatilho de `.env`
+versionado **não dispara** só porque ninguém falou do `.env`. Fazê-lo é disparar
+em arquitetura lícita, que a R6 proíbe.
 
-Registre no parecer, em uma frase, quais premissas a triagem afastou e o que isso
-desligou. A ausência de achado bloqueante é resultado, e resultado se explica.
+No `06` a premissa é alternativa: software que **integra LLM** entra sem dado de
+paciente. É por essa porta que os gatilhos de OWASP valem num projeto sem
+paciente nenhum.
 
-Não invente tema fora desta tabela. Se a triagem apontar assunto que o corpus não
-cobre — outra jurisdição, dispositivo médico, ANVISA/SaMD, EU AI Act —
-**declare a lacuna e não opine**:
-
-> Fora do escopo do corpus: <assunto>. Este corpus cobre CFM, LGPD/ANPD, Código
-> Penal, Código Civil, CDC, Marco Civil e padrões técnicos, no Brasil. Não há
-> base carregada para avaliar este ponto.
+Assunto que o corpus não cobre — outra jurisdição, dispositivo médico,
+ANVISA/SaMD, EU AI Act — entra em `fora_do_escopo`. **Não opine.** No campo
+`porque`, escreva só o que é específico daquele assunto: a frase sobre o que o
+corpus cobre é do renderer, e repeti-la duplica o texto no parecer.
 
 ---
 
 ## Fase 3 — varredura
 
-### Passo 0 — a porta já fechou
-
-A porta de aplicabilidade é da **fase 2**, e é única. Aqui não se reabre arquivo
-afastado nem se reavalia premissa: percorra os gatilhos dos arquivos carregados e
-mais nada.
-
-O requisito de arquivo afastado que continue fazendo sentido como higiene técnica
-não desaparece — entra nas seções 5 e 6 do parecer **sem severidade**, pela regra
-1. Mas não vira achado, não vira gatilho e não vira linha de checklist.
-
 ### Passo 1 — percorrer os gatilhos
 
-Percorra os gatilhos das seções carregadas contra o material.
+Percorra as linhas de `07-gatilhos-de-auditoria.md` cujo `Base` pertença a
+arquivo elegível pela fase 2. A tabela já traz `Gatilho`, `Severidade`, `Base` e
+`O que checar` — é ela que decide o achado.
 
-**Com repositório.** Use `Grep` e `Glob` sobre os padrões observáveis das linhas
-de gatilho — nomes de campo (`cpf`, `prontuario`, `nome_paciente`, `cns`),
-chamadas de API, `.env`, logging de payload, região de endpoint. Todo achado é
-`observado` e carrega arquivo e linha (que vão para o anexo técnico, não para o
-corpo do parecer).
+**Com repositório.** `Grep` e `Glob` sobre os padrões observáveis: nomes de campo
+(`cpf`, `prontuario`, `nome_paciente`, `cns`), chamadas de API, `.env`, logging
+de payload, região de endpoint. Achado é `observado`, com arquivo e linha.
 
-**Com prosa.** Percorra o mesmo catálogo, perguntando de cada gatilho **dos
-arquivos carregados** se a descrição afirma, nega ou omite o padrão. Afirma →
-`declarado`. Nega → não há achado. Omite → `ausente`, e vira pergunta.
+**Com prosa.** De cada gatilho, pergunte se a descrição afirma, nega ou omite o
+padrão. Afirma → `declarado`. Nega → sem achado. Omite → `ausente`, vira pergunta.
 
-Carregue os dispositivos em **duas etapas**. Pedir tudo de uma vez estoura o
-limite de saída de ferramenta: `aplicacao` é a maior parte do volume e é
-redundante com a diretriz na maioria dos casos.
+### Passo 2 — carregar o que os gatilhos pediram
 
-**Etapa 1 — triagem ampla.** Sobre todos os candidatos, para decidir o que entra
-no parecer e com que peso:
+Dois lookups, em lote, só sobre o que disparou.
+
+Dispositivos, para severidade e ementa:
 
 ```
-python3 ${CLAUDE_PLUGIN_ROOT}/ferramentas/citar.py --campos ementa,severidade <ID> [<ID>...]
+python3 ${CLAUDE_PLUGIN_ROOT}/ferramentas/citar.py --campos ementa,severidade <ID>...
 ```
 
-**Etapa 2 — literal.** Só para os que forem de fato citados, que são muito menos:
+Blocos de diretriz, para `Escalar se` e `Leitura adotada`:
 
 ```
-python3 ${CLAUDE_PLUGIN_ROOT}/ferramentas/citar.py --campos literal,fonte <ID> [<ID>...]
+python3 ${CLAUDE_PLUGIN_ROOT}/ferramentas/diretriz.py --campos escalar,leitura uso-clinico:D3 seguranca:D7
 ```
 
-Peça vários ids numa chamada só, em cada etapa. Some `aplicacao` **apenas** quando
-a diretriz não resolver o ponto — não por padrão. Se o script devolver
-`NAO ENCONTRADO` ou `BLOQUEADO`, **aplique a regra 2** — cite o id, não escreva o
-texto.
+`--listar` mostra os 94 blocos com título. Peça vários ids numa chamada só.
+Acrescente `verificar` **apenas** quando o `O que checar` do gatilho não bastar.
 
-Se `python3` não estiver disponível, opere em modo degradado: cite os
-identificadores, escreva `[texto não carregado — Python indisponível]` em todos,
-e diga isso no cabeçalho do parecer.
+**Não peça `literal`.** O texto da norma não entra no seu output — quem o injeta
+é o renderer, pelo id de `decide`. Pedir literal gasta contexto sem destino.
+
+Sem `python3`, opere em modo degradado: registre os ids, não invente severidade,
+e diga no campo `alcance` que o corpus não foi carregado.
 
 ---
 
-## Fase 4 — parecer
+## Fase 4 — emitir `achados.json`
 
-Escreva o parecer em `parecer-conformidade.md`, **dentro do caminho confirmado no
-campo `Onde gravar` da triagem**. Crie o diretório se não existir. Não escolha
-outro caminho, e não invente um se o usuário não confirmou — volte e confirme.
+Grave **um arquivo**, `achados.json`, no caminho confirmado na triagem. Não
+escreva markdown: `render_parecer.py` produz o parecer e o checklist a partir
+deste JSON.
 
-Estrutura fixa:
-
-```markdown
-# Parecer de conformidade — <nome do projeto>
-
-**Base.** corpus claude-para-saude, norma conferida em fonte primária em
-<`corpus_verificado_em` do VERSAO.md> · distribuível v<`plugin_version`>
-**Material avaliado.** <o que foi lido, item a item>
-**Alcance da verificação.** <observado | declarado | misto — e o que isso limita>
-**Data.** <hoje> · Res. CFM 2.454/2026: <vigente | vigora em 26/08/2026>
-
-> Orientação profissional, não parecer jurídico. As normas e as políticas de
-> fornecedores citadas mudam. Confira a data de verificação antes de usar em
-> decisão concreta.
-
-## 1. O que o projeto é
-Quadro de triagem confirmado. Três a cinco linhas.
-
-## 2. Onde ele morde
-Achados `bloqueante`, um bloco cada. Separados em dois, cada um com contagem própria:
-
-#### 2a. Violações e pontos confirmados
-Achados com `Situação` `confirmado`. Contagem própria na abertura do bloco.
-
-#### 2b. Perguntas bloqueantes — resposta errada põe o serviço em desconformidade
-Achados com `Situação` `pergunta`. Contagem própria na abertura do bloco.
-
-## 3. Pontos de exposição
-Achados `risco`, na mesma separação:
-
-#### 3a. Violações e pontos confirmados
-#### 3b. Perguntas de risco — resposta errada expõe o serviço
-
-## 4. O que perguntar ao fornecedor
-Consolidado, em forma de pergunta direta e respondível.
-
-## 5. O que exigir da TI
-Consolidado, em forma de requisito verificável.
-
-## 6. O que registrar
-Consentimento, prontuário, trilha de auditoria, contrato. Classes A/B/C da R4.
-Subdivisão, se houver, em `####` — nunca `###`.
-
-## 7. Fora do escopo
-O que a skill não avaliou, e por quê.
-
-## 8. Escalar
-Itens que caíram em `Escalar se`. Não decididos, com o destinatário.
-Subdivisão, se houver, em `####` — nunca `###`.
-
-## Anexo — evidência técnica
-Arquivo, linha e trecho de cada achado `observado`. Só aqui.
+```json
+{
+  "projeto": "<nome curto>",
+  "alcance": "observado | declarado | misto",
+  "triagem": {"material":"", "dado":"", "papel":"", "decisao_clinica":"",
+              "modalidade":"", "estagio":"", "fornecedor":"", "regiao":""},
+  "premissas_afastadas": [{"arquivo":"08-desidentificacao", "porque":""}],
+  "achados": [
+    {"id":"2.1", "titulo":"<linguagem de conformidade, não de código>",
+     "severidade":"bloqueante", "origem":"observado|declarado|ausente",
+     "situacao":"confirmado|pergunta",
+     "base":["CEM:art73","CP:art154"], "decide":"CEM:art73",
+     "texto":"duas ou três frases, sem jargão de código",
+     "leitura_adotada": null,
+     "checar":"<pergunta do gatilho>",
+     "acao":{"ti":"", "fornecedor":"", "registrar":""},
+     "evidencia":{"arquivo":"app.py","linha":"57-61"}}
+  ],
+  "checklist": [
+    {"diretriz":"uso-clinico:D3", "exigencia":"", "status":"lacuna",
+     "origem":"observado", "base":["CFM-2454-2026:art4"], "proximo":""}
+  ],
+  "fornecedor": ["<pergunta direta e respondível>"],
+  "ti": ["<requisito verificável>"],
+  "registrar": ["<classe A/B/C da R4>"],
+  "fora_do_escopo": [{"assunto":"FDA", "porque":"o corpus cobre Brasil"}],
+  "escalar": [{"item":"", "para":"jurídico|responsável técnico", "porque":""}]
+}
 ```
 
-**A data que vai no cabeçalho é a da norma, nunca a do build.** Copie
-`corpus_verificado_em` do `VERSAO.md`. O campo `construido:` do mesmo arquivo é a
-data em que o artefato foi montado e **não diz nada sobre a idade da norma** —
-escrevê-lo como data de verificação faz o parecer afirmar que a norma foi
-conferida quando não foi, e o erro cresce a cada rebuild. Se o `VERSAO.md` não
-trouxer `corpus_verificado_em`, o distribuível é velho: diga isso no cabeçalho e
-não invente data.
+Regras do formato, todas verificadas por `validar_parecer.py`:
 
-O leitor decide com base nessa linha — o aviso logo abaixo manda conferir a data
-de verificação antes de usar em decisão concreta. Data errada ali contamina tudo
-o que vem depois.
+- `id` é `N.N`. `N` é **2** para `bloqueante` e **3** para `risco`. A sequência é
+  contínua dentro da seção, atravessando confirmados e perguntas.
+- `decide` é o dispositivo que **decide** o ponto, e tem de estar em `base`. É
+  dele que o renderer tira o literal, a URL e a data.
+- `evidencia` só quando `origem` é `observado`. Vai para o anexo, não para o
+  corpo.
+- `situacao` sai da tabela da regra 3: `observado` ou `declarado` que afirma o
+  padrão → `confirmado`; só `ausente` → `pergunta`.
+- `checklist` traz uma linha por diretriz dos arquivos elegíveis na fase 2 — não
+  dos oito. Diretriz cumprida também entra. `nao-aplicavel` é para diretriz de
+  arquivo **elegível** cujo gatilho não disparou, e a linha traz a justificativa
+  em `proximo`.
+- `alcance` `declarado` proíbe qualquer `conforme-verificado`.
+- Todo achado com `situacao` `pergunta` tem linha `indeterminado` no checklist. O
+  inverso não é exigido.
 
-**Regra de níveis de título, e ela é verificável por script.** Dentro das seções
-2 e 3, `###` é **exclusivamente** título de achado, sempre numerado `N.N`. Tudo o
-mais que precise de subtítulo — os divisores `2a`/`2b`/`3a`/`3b`, e qualquer
-subdivisão dentro das seções 1 e 4 a 8 — é `####`. Um `### 6.1` ou `### 8.1`
-quebra a contagem automática tanto quanto um divisor promovido a `###`.
-
-Formato de cada achado:
-
-```markdown
-### <N.N> <título em linguagem de conformidade, não de código>
-
-**Severidade.** `<copiada literal>`
-**Origem.** `observado` — `app/prontuario.py:142` · ou `declarado` · ou `ausente`
-**Situação.** `confirmado` · ou `pergunta` — pela tabela da regra 3
-**Base.** `CFM-2454-2026:art4` · `CEM:art87`
-**Leitura adotada.** <só se a diretriz trouxer; reproduza literal>
-
-<O que foi encontrado, em duas ou três frases, sem jargão de código.>
-
-> <Literal do dispositivo, exatamente como devolvido por citar.py>
-> — <URL> · verificado em <data>
-
-**O que checar.** <pergunta do gatilho, ou bullets do bloco Verificar>
-**Ação.** exigir da TI: … · perguntar ao fornecedor: … · registrar: …
-```
-
-O título é **numerado**, `N.N`, com `N` igual ao número da seção e a sequência
-contínua dentro dela, atravessando os divisores `a` e `b`. A numeração é
-funcional: as seções 4 a 8 fazem referência cruzada a achado ("ver 2.5"), e sem
-número a referência não resolve.
+Você **não** escreve texto de norma. Não há campo para isso, e é proposital: o
+literal vem do corpus pelo id, não da sua memória.
 
 ---
 
-## Fase 5 — checklist
+## Fase 5 — renderizar
 
-Escreva o checklist em `checklist-conformidade.md`, **no mesmo caminho confirmado
-do parecer**. Crie o diretório se não existir. Não escolha outro caminho.
-
-Uma linha por diretriz **dos arquivos que a fase 2 carregou** — não só por
-achado, e não dos oito. Diretriz cumprida também entra.
-
-O tamanho do checklist é derivável antes de escrevê-lo: some as diretrizes dos
-arquivos carregados. Se a fase 2 carregou dois dos oito, o checklist tem as
-diretrizes desses dois. Arquivo afastado **não contribui com nenhuma linha** —
-nem como `nao-aplicavel`. `nao-aplicavel` é para diretriz de arquivo **carregado**
-cujo gatilho não disparou no caso, e a linha traz a justificativa.
-
-| Status | Quando |
-|---|---|
-| `conforme-verificado` | cumprido, e a evidência é `observado` |
-| `conforme-declarado` | afirmado, sem verificação — **é pendência, não conformidade** |
-| `lacuna` | não cumprido |
-| `nao-aplicavel` | fora do caso, **com justificativa na linha** |
-| `indeterminado` | falta informação; traz a pergunta que resolveria |
-
-O pareamento com o parecer é **unidirecional** (regra 3). Todo achado com
-`Situação` `pergunta` tem de aparecer aqui como `indeterminado`. O contrário não
-é exigido: uma linha `indeterminado` sem achado correspondente é legítima quando
-falta informação que não merece bloco próprio no parecer — traga nela a pergunta
-que a resolveria. O que nunca se admite é o mesmo item sair `indeterminado` aqui
-e como violação no parecer.
-
-```markdown
-| Diretriz | Exigência | Status | Origem | Base | Próximo passo |
-|---|---|---|---|---|---|
-| `uso-clinico:D3` | registro do uso de IA no prontuário | `lacuna` | `observado` | `CFM-2454-2026:art4` | exigir campo próprio e versionamento do modelo |
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/ferramentas/render_parecer.py <saida>/achados.json \
+  --saida <saida> --hoje <AAAA-MM-DD>
 ```
 
-Fecha com a contagem, **em tabela e neste formato exato** — é o que o
-`validar_parecer.py` lê para conferir contra as linhas reais da tabela acima.
-Lista com marcadores não é lida, e a conferência passa em silêncio:
-
-```markdown
-| Status | Contagem |
-|---|---|
-| `conforme-verificado` | 0 |
-| `conforme-declarado` | 3 |
-| `lacuna` | 0 |
-| `nao-aplicavel` | 57 |
-| `indeterminado` | 3 |
-```
-
-Abaixo da tabela, em prosa: quantos dos `lacuna` são bloqueantes e quantos de
-risco. E a linha de validade:
-
-> Corpus verificado em <data>. Alterações normativas posteriores não estão
-> refletidas. Fornecedor de LLM: reverificar antes de qualquer decisão — a ficha
-> de provedores tem meia-vida curta.
+Produz `parecer-conformidade.md` e `checklist-conformidade.md`. Data, versão do
+corpus e literais saem do `VERSAO.md` e das fichas. Se o comando avisar que falta
+literal para algum id, o `decide` está errado — corrija o JSON e rode de novo.
 
 ---
 
-## Antes de entregar — autoconferência
+## Antes de entregar
 
-Recuse-se a entregar se qualquer resposta for "não":
+`validar_parecer.py` confere sozinho: campos obrigatórios, vocabulário, ids
+existentes, severidade acima da base, `decide` dentro de `base`, numeração `N.N`
+por seção, `ausente` que virou `confirmado`, `conforme-verificado` com origem
+declarada, teto do `alcance` e pareamento com o checklist. Não gaste turno
+reconferindo isso.
 
-1. Toda severidade foi copiada, nenhuma foi atribuída?
-2. Todo trecho entre aspas veio de `citar.py`?
-3. Todo achado tem `Origem`?
-4. Nenhum item `declarado` foi marcado como `conforme-verificado`?
-5. Todo `Escalar se` acionado está na seção 8, sem decisão?
-6. A vigência da 2.454 foi aplicada conforme R1?
-7. Assunto fora do corpus foi declarado como lacuna, sem opinião?
-8. O aviso de que não é parecer jurídico está no cabeçalho?
-9. Nenhum item sem gatilho nem ficha recebeu severidade?
-10. Todo achado tem `Situação`, e nenhum com origem só `ausente` está como
-    `confirmado`?
-11. Onde gatilho e ficha divergiram na severidade, prevaleceu a do gatilho?
-12. Todo gatilho que disparou veio de arquivo que a fase 2 carregou, e o parecer
-    diz quais premissas a triagem afastou?
-13. Dentro das seções 2 e 3, todo `###` é achado numerado `N.N` — e nada mais
-    usa `###` no documento inteiro?
-14. A contagem do checklist está em tabela, no formato da fase 5, e bate com as
-    linhas reais?
-15. **Conte, não estime.** Achados com `Situação` `pergunta`: N. Linhas
-    `indeterminado` no checklist: M. Escreva os dois números. Se M < N, o
-    pareamento da regra 3 está quebrado — corrija antes de entregar, não depois.
-16. **Conte também o checklist.** Diretrizes dos arquivos que a fase 2 carregou:
-    D. Linhas de dado no checklist: L. Se L > D, entrou linha de arquivo afastado
-    — tire. Nenhuma linha de checklist vem de arquivo que a fase 2 não carregou.
-17. Todo `Base.` foi copiado do gatilho ou da diretriz que disparou o achado, sem
-    id acrescentado para reforçar o argumento?
-18. A data do cabeçalho é o `corpus_verificado_em` do `VERSAO.md`, e não o
-    `construido:`? Confira os dois campos e escreva qual usou.
+Rode e corrija até sair 0:
+
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/ferramentas/validar_parecer.py <saida>/achados.json
+```
+
+Confira à mão só o que script nenhum alcança:
+
+1. Cada severidade foi **copiada** do gatilho, não atribuída por parecer grave?
+2. Onde gatilho e ficha divergiram, prevaleceu a do gatilho?
+3. Item sem gatilho e sem ficha ficou **sem severidade**?
+4. `base` reproduz o campo `Base` do gatilho que disparou, sem id acrescentado
+   para reforçar o argumento?
+5. A vigência da 2.454 foi aplicada conforme R1?
+6. Assunto fora do corpus foi para `fora_do_escopo`, sem opinião?
+7. Todo `Escalar se` acionado está em `escalar`, sem decisão tomada?
+8. O `checklist` só tem linhas de arquivo elegível na fase 2?

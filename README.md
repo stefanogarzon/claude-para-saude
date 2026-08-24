@@ -47,14 +47,14 @@ Modelo Opus, caso de porte médio (descrição em prosa de um fluxo em produçã
 
 | | |
 |---|---|
-| tempo por avaliação | 13 a 17 minutos |
-| custo em API | US$ 4 a 7 |
+| tempo por avaliação | 6 a 13 minutos |
+| custo em API | US$ 2,30 a 4,70 |
 
 Não é uma resposta de trinta segundos. É a leitura de um corpus de 202
 dispositivos contra o seu caso, com cada dispositivo citado carregado da fonte.
 
-Casos menores saem mais baratos — um projeto sem dado de paciente fica perto de
-US$ 2,50 e 7 minutos, porque a triagem afasta a maior parte do catálogo.
+Casos menores saem mais baratos: um projeto sem dado de paciente fica em US$ 2,30
+e 6 minutos, porque a triagem afasta a maior parte do catálogo.
 
 ## Cobertura, e os limites dela
 
