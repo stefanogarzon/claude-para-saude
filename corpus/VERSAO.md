@@ -1,13 +1,13 @@
 ---
 tipo: versao do distribuivel
-construido: 2026-08-21
-plugin_version: 0.1.4
-dist_hash: 8337c264c8ef2ef7
+construido: 2026-08-24
+plugin_version: 0.1.5
+dist_hash: 03bc2c733a7ace6f
 ---
 
 # Versao do distribuivel
 
-27 arquivos de corpus · 1 de skill · 202 dispositivos citaveis · plugin v0.1.4.
+27 arquivos de corpus · 1 de skill · 202 dispositivos citaveis · plugin v0.1.5.
 
 Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` nem `skills/` neste repositorio — a fonte de verdade e o corpus editorial e `plugin-src/`, e estes diretorios sao sobrescritos a cada build.
 
@@ -39,4 +39,4 @@ Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` nem `skil
 | `fichas/10-civil-consumo-mci.md` | `beacd14305a21978` |
 | `fichas/11-seguranca-tecnica.md` | `b72194fc7e2b4a8d` |
 | `fichas/12-provedores-llm.md` | `1e5802dba19350c4` |
-| `skills/avaliar-conformidade/SKILL.md` | `9b9621a134478111` |
+| `skills/avaliar-conformidade/SKILL.md` | `13e861738e0261a8` |

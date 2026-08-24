@@ -43,12 +43,20 @@ ou do campo `Severidade` da ficha, com o qualificador de escopo quando houver
 (ex.: `bloqueante (inciso V)`). Nunca eleve, nunca infira, nunca arredonde para
 cima porque "parece grave".
 
-**Quando as duas existirem e divergirem, vale a do gatilho.** O gatilho é o
+**A ordem de consulta é fixa, e é um passo, não um princípio.** Para cada achado:
+procure primeiro a linha de gatilho que cobre o padrão observado e copie a
+severidade dela. Só vá à ficha quando **nenhum** gatilho cobrir o padrão. Nunca
+consulte os dois e escolha.
+
+Quando as duas existirem e divergirem, vale a do gatilho. O gatilho é o
 instrumento específico: ele grada o dispositivo para um padrão observável
 concreto. A ficha é o **teto**, nunca o piso — a R6 já proíbe gatilho mais severo
 que a entrada que o sustenta. Caso concreto: `CEM:art78` é `bloqueante` na ficha
 e `risco` na linha de gatilho "ausência de evidência de orientação da equipe
 quanto ao sigilo"; o achado sai `risco`.
+
+> Medido: o mesmo conjunto de bases saiu `bloqueante` num run e `risco` noutro,
+> porque um consultou a ficha tendo gatilho disponível. Gatilho primeiro, sempre.
 
 O corpus passou por auditoria adversarial que rebaixou 21 severidades e eliminou
 5 gatilhos por dispararem em arquitetura lícita (decisão R6). Reinflar severidade
@@ -69,6 +77,15 @@ parafraseie como se fosse transcrição.
 > Quando o achado tiver mais de uma base, cite o **literal do dispositivo que
 > decide** o ponto. Os demais entram como identificador em `Base.`, sem
 > transcrição. Nunca transcreva de memória o que não foi carregado.
+
+> **O campo `Base.` se copia, como o literal.** Reproduza os ids do campo `Base`
+> do gatilho ou da diretriz que disparou o achado, e só eles. Não acrescente
+> dispositivo que reforça o argumento, não junte bases de dois gatilhos num
+> achado só, não complete a lista com o que "também se aplica".
+>
+> Medido: o mesmo achado substantivo saiu com `art12, anexoII` num run e com
+> `art12, art13, anexoII` noutro. `Base.` é o que o parecer aponta como
+> autoridade — base montada a cada execução é autoridade que muda de tamanho.
 
 ### 3. Origem da evidência é obrigatória em todo achado
 
@@ -176,16 +193,43 @@ Feche a fase com o quadro de triagem preenchido, confirmado pelo usuário.
 Carregue apenas as diretrizes que a triagem indicou. Cada arquivo tem teto de
 3.000 palavras (~4k tokens); não carregue o que não se aplica.
 
-| Condição vinda da triagem | Carregue |
-|---|---|
-| sempre | `corpus/diretrizes/07-gatilhos-de-auditoria.md` |
-| IA em contato com paciente ou com decisão clínica | `01-uso-clinico-de-llm.md` |
-| há guarda, prazo, compartilhamento ou prontuário | `02-custodia-de-dados-de-saude.md` |
-| há provedor externo, contrato ou tráfego fora do Brasil | `03-escolha-de-fornecedor-e-regiao.md` |
-| há repositório, infraestrutura, log, credencial ou incidente | `04-seguranca-tecnica.md` |
-| a pergunta envolve quem responde, ou prova de diligência | `05-responsabilidade-e-prova.md` |
-| há código próprio sendo escrito | `06-desenvolvimento-de-software.md` |
-| há alegação de anonimização, pseudonimização ou uso secundário | `08-desidentificacao.md` |
+**A porta é uma só, e fecha aqui.** Um arquivo entra quando cumpre as **duas**
+colunas da tabela abaixo: a condição da triagem *e* a premissa de escopo. Falhar
+qualquer uma o deixa de fora, e ficar de fora significa **não existir para o
+resto da execução** — não gera gatilho, não gera achado e **não gera nenhuma
+linha de checklist**. Ele aparece uma vez só, na frase de premissas afastadas da
+seção 1 do parecer.
+
+> Medido: a versão anterior filtrava duas vezes, aqui por condição e de novo no
+> passo 0 da fase 3 por premissa de escopo, sem dizer qual das duas mandava. No
+> caso sem dado de paciente, execuções diferentes da mesma entrada produziram
+> checklists de 19 e de 69 linhas — a de 69 enumerou como `nao-aplicavel` cada
+> diretriz dos arquivos afastados, e os dois achados reais ficaram no meio de 60
+> linhas de ruído. Achado nenhum apareceu nas três execuções.
+
+| Carregue | Condição vinda da triagem | **E** a premissa de escopo do arquivo |
+|---|---|---|
+| `07-gatilhos-de-auditoria.md` | sempre | — |
+| `01-uso-clinico-de-llm.md` | IA em contato com paciente ou com decisão clínica | contato com paciente ou com decisão clínica |
+| `02-custodia-de-dados-de-saude.md` | há guarda, prazo, compartilhamento ou prontuário | há dado de paciente sob guarda |
+| `03-escolha-de-fornecedor-e-regiao.md` | há provedor externo, contrato ou tráfego fora do Brasil | há dado de paciente indo ao fornecedor |
+| `04-seguranca-tecnica.md` | há repositório, infraestrutura, log, credencial ou incidente | há dado de saúde no sistema |
+| `05-responsabilidade-e-prova.md` | a pergunta envolve quem responde, ou prova de diligência | há dado de paciente, ou ato médico apoiado por IA |
+| `06-desenvolvimento-de-software.md` | há código próprio sendo escrito | há código próprio tratando dado de paciente **ou chamando LLM** |
+| `08-desidentificacao.md` | há alegação de anonimização, pseudonimização ou uso secundário | há alegação de anonimização ou pseudonimização |
+
+A premissa de escopo é o campo `tema:` do cabeçalho de cada arquivo, transcrito.
+Silêncio do material não supre premissa ausente: se a triagem confirmou "nenhum
+dado de paciente", `04-seguranca-tecnica` fica de fora, e o gatilho de `.env`
+versionado **não vira pergunta bloqueante** só porque ninguém falou do `.env`.
+Fazê-lo é disparar em arquitetura lícita, que é o que a R6 proíbe.
+
+Repare no `06`: a premissa é alternativa. Software que **integra LLM** entra
+mesmo sem dado de paciente — é por essa porta que os gatilhos de OWASP e de
+comportamento do modelo continuam valendo num projeto sem paciente nenhum.
+
+Registre no parecer, em uma frase, quais premissas a triagem afastou e o que isso
+desligou. A ausência de achado bloqueante é resultado, e resultado se explica.
 
 Não invente tema fora desta tabela. Se a triagem apontar assunto que o corpus não
 cobre — outra jurisdição, dispositivo médico, ANVISA/SaMD, EU AI Act —
@@ -199,35 +243,15 @@ cobre — outra jurisdição, dispositivo médico, ANVISA/SaMD, EU AI Act —
 
 ## Fase 3 — varredura
 
-### Passo 0 — porta de aplicabilidade
+### Passo 0 — a porta já fechou
 
-**Antes de percorrer o catálogo**, case o escopo declarado de cada arquivo de
-diretriz contra a triagem. O escopo está no cabeçalho de cada arquivo, no campo
-`tema:`:
+A porta de aplicabilidade é da **fase 2**, e é única. Aqui não se reabre arquivo
+afastado nem se reavalia premissa: percorra os gatilhos dos arquivos carregados e
+mais nada.
 
-| Arquivo | Escopo declarado | Premissa que a triagem precisa satisfazer |
-|---|---|---|
-| `01-uso-clinico-de-llm` | uso clínico de LLM e de IA no atendimento | contato com paciente ou com decisão clínica |
-| `02-custodia-de-dados-de-saude` | custódia, guarda e compartilhamento de dado de paciente | há dado de paciente sob guarda |
-| `03-escolha-de-fornecedor-e-regiao` | fornecedor de IA **para uso com dado de paciente** | há dado de paciente indo ao fornecedor |
-| `04-seguranca-tecnica` | sistema que **trata dado de saúde** | há dado de saúde no sistema |
-| `05-responsabilidade-e-prova` | uso de IA **com dado de paciente** | há dado de paciente, ou ato médico apoiado por IA |
-| `06-desenvolvimento-de-software` | software que trata dado de paciente **ou integra LLM** | há código próprio tratando dado de paciente ou chamando LLM |
-| `08-desidentificacao` | desidentificação e risco de reidentificação | há alegação de anonimização ou pseudonimização |
-
-Gatilho sustentado **apenas** por arquivo cujo escopo a triagem afastou **não
-dispara**. Silêncio do material não supre premissa ausente: se a triagem
-confirmou "nenhum dado de paciente", o gatilho de `.env` versionado não vira
-pergunta bloqueante só porque ninguém falou do `.env`. Fazê-lo é disparar em
-arquitetura lícita, que é o que a R6 proíbe.
-
-O requisito que continue fazendo sentido como higiene técnica não desaparece:
-entra nas seções 5 e 6 do parecer **sem severidade**, pela regra 1, e a linha
-correspondente do checklist sai `nao-aplicavel` com a justificativa apontando
-para onde o requisito foi parar.
-
-Registre no parecer, em uma frase, quais premissas a triagem afastou e o que isso
-desligou. A ausência de achado bloqueante é resultado, e resultado se explica.
+O requisito de arquivo afastado que continue fazendo sentido como higiene técnica
+não desaparece — entra nas seções 5 e 6 do parecer **sem severidade**, pela regra
+1. Mas não vira achado, não vira gatilho e não vira linha de checklist.
 
 ### Passo 1 — percorrer os gatilhos
 
@@ -239,8 +263,8 @@ chamadas de API, `.env`, logging de payload, região de endpoint. Todo achado é
 `observado` e carrega arquivo e linha (que vão para o anexo técnico, não para o
 corpo do parecer).
 
-**Com prosa.** Percorra o mesmo catálogo, perguntando de cada gatilho **que passou
-pelo passo 0** se a descrição afirma, nega ou omite o padrão. Afirma →
+**Com prosa.** Percorra o mesmo catálogo, perguntando de cada gatilho **dos
+arquivos carregados** se a descrição afirma, nega ou omite o padrão. Afirma →
 `declarado`. Nega → não há achado. Omite → `ausente`, e vira pergunta.
 
 Carregue os dispositivos em **duas etapas**. Pedir tudo de uma vez estoura o
@@ -368,8 +392,14 @@ número a referência não resolve.
 Escreva o checklist em `checklist-conformidade.md`, **no mesmo caminho confirmado
 do parecer**. Crie o diretório se não existir. Não escolha outro caminho.
 
-Uma linha por diretriz aplicável das
-diretrizes carregadas — não só por achado. Diretriz cumprida também entra.
+Uma linha por diretriz **dos arquivos que a fase 2 carregou** — não só por
+achado, e não dos oito. Diretriz cumprida também entra.
+
+O tamanho do checklist é derivável antes de escrevê-lo: some as diretrizes dos
+arquivos carregados. Se a fase 2 carregou dois dos oito, o checklist tem as
+diretrizes desses dois. Arquivo afastado **não contribui com nenhuma linha** —
+nem como `nao-aplicavel`. `nao-aplicavel` é para diretriz de arquivo **carregado**
+cujo gatilho não disparou no caso, e a linha traz a justificativa.
 
 | Status | Quando |
 |---|---|
@@ -431,9 +461,17 @@ Recuse-se a entregar se qualquer resposta for "não":
 10. Todo achado tem `Situação`, e nenhum com origem só `ausente` está como
     `confirmado`?
 11. Onde gatilho e ficha divergiram na severidade, prevaleceu a do gatilho?
-12. Todo gatilho que disparou passou pela porta de aplicabilidade do passo 0 da
-    fase 3, e o parecer diz quais premissas a triagem afastou?
+12. Todo gatilho que disparou veio de arquivo que a fase 2 carregou, e o parecer
+    diz quais premissas a triagem afastou?
 13. Dentro das seções 2 e 3, todo `###` é achado numerado `N.N` — e nada mais
     usa `###` no documento inteiro?
 14. A contagem do checklist está em tabela, no formato da fase 5, e bate com as
     linhas reais?
+15. **Conte, não estime.** Achados com `Situação` `pergunta`: N. Linhas
+    `indeterminado` no checklist: M. Escreva os dois números. Se M < N, o
+    pareamento da regra 3 está quebrado — corrija antes de entregar, não depois.
+16. **Conte também o checklist.** Diretrizes dos arquivos que a fase 2 carregou:
+    D. Linhas de dado no checklist: L. Se L > D, entrou linha de arquivo afastado
+    — tire. Nenhuma linha de checklist vem de arquivo que a fase 2 não carregou.
+17. Todo `Base.` foi copiado do gatilho ou da diretriz que disparou o achado, sem
+    id acrescentado para reforçar o argumento?
