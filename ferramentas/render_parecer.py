@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
-"""Renderiza parecer e checklist a partir do achados.json emitido pela skill.
+"""Renderiza o parecer a partir do achados.json e do catalogo.
 
-O modelo emite dados; este script escreve o documento. O literal de cada norma
-NAO vem do modelo: vem do corpus, pelo id em `decide`, via citar.py. Assim o
-texto de lei no parecer e sempre o do corpus, e parafrasear deixa de ser
-possivel — que era o buraco que o validar_parecer.py nao cobria.
+O modelo devolve tuplas [gatilho, origem, situacao, evidencia]. Tudo o mais —
+o que o padrao e, a severidade, a base normativa, a pergunta de checagem, a
+mitigacao e o literal da norma — sai do corpus aqui. O modelo nao escreve texto
+de norma nem de mitigacao, entao nao pode parafrasear nenhum dos dois.
 
-A data do cabecalho sai do `corpus_verificado_em` do VERSAO.md, nunca de
-`construido:` e nunca da memoria do modelo.
+O literal de cada dispositivo sai UMA vez, em anexo, e nao a cada achado que o
+invoca: no formato anterior o mesmo artigo era transcrito em todos os achados
+que o citavam.
 
 Uso:
-    python3 ferramentas/render_parecer.py achados.json --saida <dir>
+    python3 ferramentas/render_parecer.py achados.json --saida <dir> --hoje AAAA-MM-DD
 """
 
 import argparse
+import collections
 import io
 import json
 import os
@@ -22,24 +24,20 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import citar
-from esquema_achados import STATUS, TRIAGEM
+import gatilhos
+from esquema_achados import (ORIGEM, SITUACAO, ALCANCE, ARQUIVOS, TRIAGEM,
+                             ROTULO_TRIAGEM, DESTINO)
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ORDEM = {"bloqueante": 0, "risco": 1, "boa-prática": 2}
+ABREV = {"bloqueante": "bloq.", "risco": "risco", "boa-prática": "b.prát."}
 
 AVISO = ("> Orientação profissional, não parecer jurídico. As normas e as "
-         "políticas de\n> fornecedores citadas mudam. Confira a data de "
-         "verificação antes de usar em\n> decisão concreta.")
-
-ROTULO_TRIAGEM = {
-    "material": "Material recebido", "dado": "Tipo de dado",
-    "papel": "Papel da IA", "decisao_clinica": "Contato com decisão clínica",
-    "modalidade": "Modalidade", "estagio": "Estágio",
-    "fornecedor": "Fornecedor e região", "regiao": "Região de processamento",
-}
+         "políticas de fornecedores citadas mudam. Confira a data de verificação "
+         "antes de usar em decisão concreta.")
 
 
 def versao(dir_corpus):
-    """(corpus_verificado_em, plugin_version) do VERSAO.md do distribuivel."""
     p = os.path.join(dir_corpus, "VERSAO.md")
     if not os.path.isfile(p):
         return None, None
@@ -49,174 +47,143 @@ def versao(dir_corpus):
     return (v.group(1) if v else None), (pv.group(1) if pv else None)
 
 
-def literais(ids, dir_fichas):
-    """{id: {literal, fonte}} do corpus. Fonte unica do texto de norma."""
-    corpus = citar.carregar(dir_fichas)
-    out = {}
-    for i in ids:
-        e = corpus.get(i)
-        if not e:
+def rotulo(mapa, chave):
+    return mapa.get(chave, chave)
+
+
+def render(d, cat, corpus, verif, pver, hoje, vigente):
+    idx = {g["id"]: g for g in cat}
+    achados = []
+    for i, t in enumerate(d["a"]):
+        gid, ori, sit = t[0], t[1], t[2]
+        ev = t[3] if len(t) > 3 else None
+        g = idx.get(gid)
+        if not g:
             continue
-        out[i] = {"literal": e.get("literal", ""), "fonte": e.get("fonte", "")}
-    return out
+        achados.append({"g": g, "ori": ori, "sit": sit, "ev": ev})
+    achados.sort(key=lambda x: (ORDEM.get(x["g"]["severidade"].split()[0], 9),
+                                x["g"]["id"]))
+    # numeracao N.N: secao 2 para bloqueante, 3 para o resto
+    cont = collections.Counter()
+    for a in achados:
+        sec = 2 if a["g"]["severidade"].startswith("bloqueante") else 3
+        cont[sec] += 1
+        a["num"] = "%d.%d" % (sec, cont[sec])
 
-
-def bloco_achado(a, lits):
-    L = ["### %s %s\n" % (a["id"], a["titulo"])]
-    L.append("**Severidade.** `%s`" % a["severidade"])
-    ori = a["origem"]
-    if a.get("evidencia"):
-        ev = a["evidencia"]
-        ori += " — `%s:%s`" % (ev.get("arquivo", "?"), ev.get("linha", "?"))
-    L.append("**Origem.** `%s`" % ori)
-    L.append("**Situação.** `%s`" % a["situacao"])
-    L.append("**Base.** " + " · ".join("`%s`" % b for b in a["base"]))
-    if a.get("leitura_adotada"):
-        L.append("**Leitura adotada.** %s" % a["leitura_adotada"])
-    L.append("")
-    L.append(a["texto"])
-    L.append("")
-
-    # O literal vem do corpus, nao do modelo.
-    d = a.get("decide")
-    lit = lits.get(d)
-    if lit and lit["literal"]:
-        L.append(lit["literal"].rstrip())
-        L.append("> — %s" % lit["fonte"])
-    else:
-        L.append("> `%s` — [texto não carregado]" % (d or "sem id"))
-    L.append("")
-    if a.get("checar"):
-        L.append("**O que checar.** %s" % a["checar"])
-    ac = a.get("acao") or {}
-    if ac:
-        partes = [("exigir da TI: " + ac["ti"]) if ac.get("ti") else None,
-                  ("perguntar ao fornecedor: " + ac["fornecedor"]) if ac.get("fornecedor") else None,
-                  ("registrar: " + ac["registrar"]) if ac.get("registrar") else None]
-        L.append("**Ação.** " + " · ".join(p for p in partes if p))
-    L.append("")
-    return "\n".join(L)
-
-
-def secao_severidade(d, num, titulo, sev, lits):
-    achados = [a for a in d["achados"] if a["severidade"].split()[0] == sev]
-    conf = [a for a in achados if a["situacao"] == "confirmado"]
-    perg = [a for a in achados if a["situacao"] == "pergunta"]
-    L = ["## %d. %s\n" % (num, titulo)]
-    L.append("#### %da. Violações e pontos confirmados\n" % num)
-    L.append("%d achado(s).\n" % len(conf))
-    L += [bloco_achado(a, lits) for a in conf]
-    rot = ("Perguntas bloqueantes — resposta errada põe o serviço em desconformidade"
-           if sev == "bloqueante" else
-           "Perguntas de risco — resposta errada expõe o serviço")
-    L.append("#### %db. %s\n" % (num, rot))
-    L.append("%d achado(s).\n" % len(perg))
-    L += [bloco_achado(a, lits) for a in perg]
-    return "\n".join(L)
-
-
-def lista(titulo, itens, num):
-    L = ["## %d. %s\n" % (num, titulo)]
-    L += ["- %s" % i for i in (itens or [])] or ["Nada a registrar."]
-    L.append("")
-    return "\n".join(L)
-
-
-def render_parecer(d, lits, verif, pver, hoje):
-    L = ["# Parecer de conformidade — %s\n" % d["projeto"]]
-    L.append("**Base.** corpus claude-para-saude, norma conferida em fonte "
-             "primária em %s · distribuível v%s" % (verif or "?", pver or "?"))
-    L.append("**Material avaliado.** %s" % d["triagem"].get("material", "—"))
-    teto = {"declarado": "o teto de todo item é `conforme-declarado`",
-            "observado": "há evidência observada",
-            "misto": "cada achado declara a sua origem"}
-    L.append("**Alcance da verificação.** `%s` — %s"
-             % (d["alcance"], teto.get(d["alcance"], "")))
-    L.append("**Data.** %s\n" % hoje)
-    L.append(AVISO + "\n")
-    L.append("---\n")
+    L = ["# Parecer de conformidade — %s\n" % d["p"]]
+    L.append("corpus conferido em fonte primária em **%s** · distribuível v%s · "
+             "alcance `%s` · %s"
+             % (verif or "?", pver or "?", rotulo(ALCANCE, d["alc"]), hoje))
+    if d["alc"] == "D":
+        L.append("\nMaterial só declarado: o teto de todo item é "
+                 "`conforme-declarado`. Conformidade declarada não é conformidade.")
+    L.append("\n" + AVISO + "\n")
 
     L.append("## 1. O que o projeto é\n")
-    L.append("| Campo | Valor confirmado |")
+    L.append("| Campo | Valor |")
     L.append("|---|---|")
-    for k in TRIAGEM:
-        v = d["triagem"].get(k)
-        if v:
-            L.append("| %s | %s |" % (ROTULO_TRIAGEM.get(k, k), v))
+    for k, mapa in TRIAGEM:
+        if d["tri"].get(k):
+            L.append("| %s | %s |" % (ROTULO_TRIAGEM[k], rotulo(mapa, d["tri"][k])))
+    L.append("| %s | %s |" % (ROTULO_TRIAGEM["dec"],
+                              "sim" if d["tri"].get("dec") else "não"))
+    if d["tri"].get("forn"):
+        L.append("| %s | %s |" % (ROTULO_TRIAGEM["forn"], d["tri"]["forn"]))
     L.append("")
-    afast = d.get("premissas_afastadas") or []
+    afast = d.get("afast") or []
     if afast:
-        L.append("**Premissas que a triagem afastou.** " + " ".join(
-            "`%s` — %s." % (a["arquivo"], a["porque"]) for a in afast) + "\n")
+        L.append("Premissas afastadas pela triagem: %s. Os gatilhos desses "
+                 "arquivos não dispararam.\n"
+                 % ", ".join("`%s` (%s)" % (a, ARQUIVOS.get(a, a)) for a in afast))
 
-    L.append(secao_severidade(d, 2, "Onde ele morde", "bloqueante", lits))
-    L.append(secao_severidade(d, 3, "Pontos de exposição", "risco", lits))
-    L.append(lista("O que perguntar ao fornecedor", d.get("fornecedor"), 4))
-    L.append(lista("O que exigir da TI", d.get("ti"), 5))
-    L.append(lista("O que registrar", d.get("registrar"), 6))
+    L.append("## 2. Achados\n")
+    n_b = sum(1 for a in achados if a["g"]["severidade"].startswith("bloqueante"))
+    L.append("%d achado(s): %d bloqueante(s), %d de risco. "
+             "`confirmado` é constatação; `pergunta` é o que a resposta errada "
+             "poria em desconformidade.\n"
+             % (len(achados), n_b, len(achados) - n_b))
+    L.append("| # | O que faz | Risco | Base | Mitigação |")
+    L.append("|---|---|---|---|---|")
+    for a in achados:
+        g = a["g"]
+        sev = ABREV.get(g["severidade"].split()[0], g["severidade"])
+        marca = " †" if g["futuro"] and not vigente else ""
+        onde = " · `%s`" % a["ev"] if a["ev"] else ""
+        L.append("| %s | %s%s | `%s` · %s%s | %s | %s |"
+                 % (a["num"], g["gatilho"], onde, sev,
+                    rotulo(SITUACAO, a["sit"]), marca,
+                    " · ".join("`%s`" % b for b in g["base"]), g["mitigacao"]))
+    L.append("")
+    if any(a["g"]["futuro"] for a in achados) and not vigente:
+        L.append("† decorre da Res. CFM 2.454/2026, com efeitos a partir de "
+                 "26/08/2026 — até lá é exigência futura.\n")
 
-    L.append("## 7. Fora do escopo\n")
-    fe = d.get("fora_do_escopo") or []
-    if fe:
+    L.append("#### O que checar, por achado\n")
+    for a in achados:
+        L.append("- **%s** — %s" % (a["num"], a["g"]["checar"]))
+    L.append("")
+
+    esc = d.get("esc") or []
+    L.append("## 3. Escalar\n")
+    L += ["- %s → **%s**" % (e[0], rotulo(DESTINO, e[1])) for e in esc] or \
+         ["Nada a escalar."]
+    L.append("")
+
+    fora = d.get("fora") or []
+    L.append("## 4. Fora do escopo\n")
+    if fora:
         L.append("Este corpus cobre CFM, LGPD/ANPD, Código Penal, Código Civil, "
                  "CDC, Marco Civil e padrões técnicos, no Brasil. Não há base "
-                 "carregada para avaliar os pontos abaixo, e o parecer não opina "
-                 "sobre eles.\n")
-        for f in fe:
-            L.append("- **%s** — %s" % (f["assunto"], f["porque"].rstrip(".") + "."))
+                 "carregada para: **%s**. O parecer não opina sobre eles.\n"
+                 % ", ".join(fora))
     else:
-        L.append("Nada fora do escopo.")
-    L.append("")
+        L.append("Nada fora do escopo.\n")
 
-    L.append("## 8. Escalar\n")
-    esc = d.get("escalar") or []
-    L += ["- **%s** → %s. %s" % (e["item"], e["para"], e.get("porque", ""))
-          for e in esc] or ["Nada a escalar."]
-    L.append("")
+    # cobertura: derivada, nao escrita pelo modelo
+    disparou = {a["g"]["id"] for a in achados}
+    perg = sum(1 for a in achados if a["sit"] == "P")
+    L.append("## 5. Cobertura\n")
+    L.append("Catálogo de %d gatilhos. **%d** dispararam, dos quais %d como "
+             "pergunta. Os %d restantes foram percorridos e não dispararam.\n"
+             % (len(cat), len(disparou), perg, len(cat) - len(disparou)))
 
+    # anexo: literal de cada dispositivo, uma vez
+    ids = []
+    for a in achados:
+        for b in a["g"]["base"]:
+            if b not in ids:
+                ids.append(b)
+    L.append("O texto integral de cada dispositivo citado está em "
+             "`anexo-normativo.md`, com URL e data de verificação.\n")
+
+    obs = [a for a in achados if a["ev"]]
     L.append("## Anexo — evidência técnica\n")
-    obs = [a for a in d["achados"] if a.get("evidencia")]
     if obs:
-        L.append("| Achado | Arquivo | Linha |")
-        L.append("|---|---|---|")
-        for a in obs:
-            e = a["evidencia"]
-            L.append("| %s | `%s` | %s |" % (a["id"], e.get("arquivo", "?"),
-                                             e.get("linha", "?")))
+        L.append("| Achado | Onde |")
+        L.append("|---|---|")
+        L += ["| %s | `%s` |" % (a["num"], a["ev"]) for a in obs]
     else:
         L.append("Não há. Nenhum achado tem origem `observado`.")
     L.append("")
-    return "\n".join(L)
 
-
-def render_checklist(d, verif):
-    L = ["# Checklist de conformidade — %s\n" % d["projeto"]]
-    L.append("| Diretriz | Exigência | Status | Origem | Base | Próximo passo |")
-    L.append("|---|---|---|---|---|---|")
-    cont = {s: 0 for s in STATUS}
-    for l in d["checklist"]:
-        cont[l["status"]] = cont.get(l["status"], 0) + 1
-        L.append("| `%s` | %s | `%s` | `%s` | %s | %s |"
-                 % (l["diretriz"], l["exigencia"], l["status"],
-                    l.get("origem", "ausente"),
-                    " · ".join("`%s`" % b for b in l.get("base", [])) or "—",
-                    l.get("proximo", "—")))
-    L.append("")
-    L.append("| Status | Contagem |")
-    L.append("|---|---|")
-    for s in STATUS:
-        L.append("| `%s` | %d |" % (s, cont[s]))
-    L.append("")
-    lac = [l for l in d["checklist"] if l["status"] == "lacuna"]
-    sev = {}
-    for a in d["achados"]:
-        sev[a["severidade"].split()[0]] = sev.get(a["severidade"].split()[0], 0) + 1
-    L.append("Dos %d `lacuna`, %d correspondem a achado bloqueante e %d a achado "
-             "de risco.\n" % (len(lac), sev.get("bloqueante", 0), sev.get("risco", 0)))
-    L.append("> Corpus verificado em %s. Alterações normativas posteriores não "
-             "estão refletidas. Fornecedor de LLM: reverificar antes de qualquer "
-             "decisão — a ficha de provedores tem meia-vida curta." % (verif or "?"))
-    return "\n".join(L)
+    # Anexo em arquivo proprio. No mesmo documento ele era 82% dos bytes — 50 KB
+    # de literal contra 11 KB de parecer — e nao e o que o medico le para decidir.
+    A = ["# Anexo normativo — %s\n" % d["p"]]
+    A.append("Texto integral dos %d dispositivos citados no parecer. Corpus "
+             "conferido em fonte primária em %s.\n" % (len(ids), verif or "?"))
+    faltando = []
+    for i in ids:
+        e = corpus.get(i)
+        A.append("## `%s`\n" % i)
+        if e and e.get("ementa"):
+            A.append("%s\n" % e["ementa"])
+        if e and e.get("literal"):
+            A.append(e["literal"].rstrip())
+            A.append("> — %s\n" % e.get("fonte", ""))
+        else:
+            faltando.append(i)
+            A.append("[texto não carregado]\n")
+    return "\n".join(L), "\n".join(A), faltando
 
 
 def main():
@@ -224,29 +191,32 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("achados")
     ap.add_argument("--saida", required=True)
+    ap.add_argument("--hoje", required=True)
     ap.add_argument("--fichas", default=os.environ.get(
         "CORPUS_FICHAS", os.path.join(RAIZ, "corpus", "fichas")))
     ap.add_argument("--corpus", default=os.environ.get(
         "CORPUS_DIR", os.path.join(RAIZ, "corpus")))
-    ap.add_argument("--hoje", required=True, help="data do parecer, AAAA-MM-DD")
+    ap.add_argument("--catalogo", default=None)
     a = ap.parse_args()
 
     d = json.load(io.open(a.achados, encoding="utf-8"))
-    ids = {x.get("decide") for x in d["achados"] if x.get("decide")}
-    lits = literais(ids, a.fichas)
+    cat = gatilhos.carregar(a.catalogo or os.path.join(
+        a.corpus, "diretrizes", "07-gatilhos-de-auditoria.md"))
+    corpus = citar.carregar(a.fichas)
     verif, pver = versao(a.corpus)
+    vigente = a.hoje >= "2026-08-26"
 
+    texto, anexo, faltando = render(d, cat, corpus, verif, pver, a.hoje, vigente)
     os.makedirs(a.saida, exist_ok=True)
     io.open(os.path.join(a.saida, "parecer-conformidade.md"), "w",
-            encoding="utf-8").write(render_parecer(d, lits, verif, pver, a.hoje) + "\n")
-    io.open(os.path.join(a.saida, "checklist-conformidade.md"), "w",
-            encoding="utf-8").write(render_checklist(d, verif) + "\n")
+            encoding="utf-8").write(texto + "\n")
+    io.open(os.path.join(a.saida, "anexo-normativo.md"), "w",
+            encoding="utf-8").write(anexo + "\n")
 
-    faltando = sorted(i for i in ids if i not in lits)
     if faltando:
         print("AVISO: sem literal no corpus: " + ", ".join(faltando), file=sys.stderr)
-    print("parecer e checklist em %s · %d achados · %d linhas de checklist"
-          % (a.saida, len(d["achados"]), len(d["checklist"])))
+    print("parecer %d B · anexo %d B · %d achados · %s"
+          % (len(texto.encode()), len(anexo.encode()), len(d["a"]), a.saida))
     return 0
 
 

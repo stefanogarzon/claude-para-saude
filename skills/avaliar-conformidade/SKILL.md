@@ -15,8 +15,8 @@ description: >
   atinge o meu sistema?", "estamos prontos para 26 de agosto?".
 license: código MIT · corpus e skill CC BY-SA 4.0 — ver LICENSE do plugin
 compatibility: >
-  Requer Python 3 no PATH. As ferramentas fazem o lookup do corpus e renderizam
-  o parecer; sem Python a skill não produz documento.
+  Requer Python 3 no PATH. O catálogo, a validação e a renderização passam pelas
+  ferramentas; sem Python a skill não produz documento.
 allowed-tools: Read, Grep, Glob, Write, Edit, Bash(python3:*)
 # `Bash(python3:*)` e nao o caminho completo do script: o matcher de
 # permissao NAO expande ${CLAUDE_PLUGIN_ROOT}. Com a variavel no padrao,
@@ -42,88 +42,54 @@ e diz quando a decisão precisa subir.
 
 Cinco regras. Nenhuma admite exceção. Violar qualquer uma invalida o output.
 
-### 1. Severidade se copia, nunca se atribui
+### 1. Você classifica, não descreve
 
-A severidade de um achado é **copiada literal** da coluna `Severidade` do gatilho
-ou do campo `Severidade` da ficha, com o qualificador de escopo quando houver
-(ex.: `bloqueante (inciso V)`). Nunca eleve, nunca infira, nunca arredonde para
-cima porque "parece grave".
+O catálogo de gatilhos é o vocabulário. Cada achado é **um id do catálogo**, não
+uma frase sua. Severidade, base normativa, pergunta de checagem e mitigação vêm
+de lá — você não as escreve, não as parafraseia e não as completa.
 
-**A ordem de consulta é fixa, e é um passo, não um princípio.** Para cada achado:
-procure primeiro a linha de gatilho que cobre o padrão observado e copie a
-severidade dela. Só vá à ficha quando **nenhum** gatilho cobrir o padrão. Nunca
-consulte os dois e escolha.
+Se o material mostra um padrão que o catálogo não cobre, ele **não vira achado**.
+Registre em `esc` se merecer decisão humana, ou em `fora` se for outra jurisdição.
+Inventar categoria é o mesmo que inventar norma.
 
-Quando as duas existirem e divergirem, vale a do gatilho. O gatilho é o
-instrumento específico: ele grada o dispositivo para um padrão observável
-concreto. A ficha é o **teto**, nunca o piso — a R6 já proíbe gatilho mais severo
-que a entrada que o sustenta. Caso concreto: `CEM:art78` é `bloqueante` na ficha
-e `risco` na linha de gatilho "ausência de evidência de orientação da equipe
-quanto ao sigilo"; o achado sai `risco`.
+### 2. Você não escreve norma nem mitigação
 
-O corpus passou por auditoria adversarial que rebaixou 21 severidades e eliminou
-5 gatilhos por dispararem em arquitetura lícita (decisão R6). Reinflar severidade
-desfaz esse trabalho e produz alarme falso em serviço conforme.
+Não há campo para nenhuma das duas. O renderer as busca no corpus pelo id. Não
+transcreva dispositivo, não resuma artigo, não sugira correção fora da coluna
+`Mitigação` do catálogo.
 
-> Quando **nenhum gatilho e nenhuma ficha** sustentarem o item, ele fica **sem
-> severidade**. Registre a lacuna, diga o que falta e não gradue. Atribuir
-> severidade onde não há base é inferir — e inferir severidade é exatamente o
-> que a R6 proíbe. Vale igualmente para `indeterminado`.
+### 3. Origem e situação são eixos distintos
 
-### 2. Você não escreve norma
-
-Não há campo de texto de norma no `achados.json`. O literal, a URL e a data são
-injetados por `render_parecer.py` a partir do id em `decide`. Não transcreva, não
-parafraseie, não resuma dispositivo — nem no campo `texto`, que é a sua análise.
-
-> **O campo `Base.` se copia, como o literal.** Reproduza os ids do campo `Base`
-> do gatilho ou da diretriz que disparou o achado, e só eles. Não acrescente
-> dispositivo que reforça o argumento, não junte bases de dois gatilhos num
-> achado só, não complete a lista com o que "também se aplica".
-
-### 3. Origem da evidência é obrigatória em todo achado
-
-Cada achado carrega uma origem, e a origem muda o que ele significa:
-
-| Origem | Significa | Sai no output como |
-|---|---|---|
-| `observado` | a skill leu no material — código, configuração, contrato, documento | evidência |
-| `declarado` | alguém afirmou, sem verificação possível | **pendência de comprovação**, não conformidade |
-| `ausente` | não há informação para decidir | pergunta a fazer |
-
-**Conformidade declarada não é conformidade.** Nunca marque `conforme-verificado`
-com base em prosa. Se o material de entrada é só descrição, o teto de todo item
-é `conforme-declarado`, e isso precisa estar dito no cabeçalho do parecer.
-
-Severidade e situação são eixos distintos. Severidade é o peso da norma e vem do
-gatilho. Situação é se o padrão foi afirmado, e vem da origem:
-
-| Origem | `situacao` |
+| Origem | Significa |
 |---|---|
-| `observado`, ou `declarado` que afirma o padrão | `confirmado` |
-| só `ausente` | `pergunta` |
+| `O` observado | você leu no material — código, configuração, contrato |
+| `D` declarado | alguém afirmou, sem verificação possível |
+| `A` ausente | não há informação para decidir |
 
-Um dispositivo `bloqueante` continua `bloqueante` quando ninguém sabe se o
-serviço o descumpre — muda que aquilo é **pergunta**, não constatação. Achado com
-origem só `ausente` nunca é reportado como violação.
+| Origem | `situação` |
+|---|---|
+| `O`, ou `D` que afirma o padrão | `C` confirmado |
+| só `A` | `P` pergunta |
 
-Pareamento unidirecional: todo achado `pergunta` tem linha `indeterminado` no
-checklist. O inverso não é exigido.
+Um gatilho `bloqueante` continua `bloqueante` quando ninguém sabe se o serviço o
+descumpre — muda que aquilo é **pergunta**, não constatação. Achado com origem
+`A` nunca é reportado como violação.
+
+**Conformidade declarada não é conformidade.** Material só em prosa: `alc` é
+`D`, e nenhum item pode sair como verificado.
+
+Evidência (`arquivo:linha`) é obrigatória quando a origem é `O`, e proibida nas
+outras — o que não foi observado não tem onde.
 
 ### 4. Gatilho obriga a perguntar, não decide
 
-Cada achado termina na pergunta da coluna `O que checar` do gatilho, ou no bloco
-`Verificar` da diretriz. O output é **pergunta com base normativa**, não veredito.
 Onde a diretriz trouxer `Escalar se` e a condição se aplicar, não decida:
-registre e encaminhe ao responsável técnico ou ao jurídico.
+registre em `esc` com o destinatário.
 
 ### 5. R1–R7 têm precedência sobre as diretrizes
 
-Leia `corpus/decisoes.md` antes de qualquer outro arquivo do corpus. Diretriz que
-conflite com uma das sete decisões é **reportada como erro do corpus**, não
-aplicada. Ao aplicar leitura não pacificada (R5), reproduza a linha
-`Leitura adotada` literalmente — o leitor precisa saber o que é norma e o que é
-interpretação sua.
+Leia `corpus/decisoes.md` antes de qualquer outro arquivo. Diretriz que conflite
+com uma das sete decisões é **reportada como erro do corpus**, não aplicada.
 
 ---
 
@@ -149,16 +115,18 @@ serão carregadas; errar aqui aplica o arcabouço errado ao caso inteiro.
 
 Extraia do material e **confirme com o usuário antes de seguir**:
 
-| Campo | Valores |
-|---|---|
-| Material recebido | repositório · contrato ou documentação · descrição em prosa · combinação |
-| Tipo de dado | identificado · pseudonimizado · anonimizado alegado · sintético · nenhum dado de paciente |
-| Papel da IA | apoio à decisão clínica · geração de texto clínico · triagem · comunicação com paciente · administrativo · pesquisa |
-| Contato com decisão clínica | sim · não |
-| Modalidade | presencial · telemedicina · ambos (define R2) |
-| Estágio | ideia · protótipo · piloto · produção |
-| Fornecedor e região | qual provedor, qual endpoint, qual região |
-| Onde gravar | proponha `saidas/<slug>/`, com `<slug>` derivado do projeto em kebab-case, e confirme o caminho com o usuário junto do resto da triagem |
+Apresente ao usuário por extenso; grave no JSON pelo código.
+
+| Campo | Valores | código |
+|---|---|---|
+| Material recebido | repositório · contrato/documentação · prosa · combinação | `mat` `R`/`C`/`P`/`X` |
+| Tipo de dado | identificado · pseudonimizado · anonimizado alegado · sintético · nenhum | `dado` `ID`/`PS`/`AN`/`SI`/`NA` |
+| Papel da IA | apoio à decisão clínica · geração de texto clínico · triagem · comunicação com paciente · administrativo · pesquisa | `papel` `ADC`/`GTC`/`TRI`/`COM`/`ADM`/`PES` |
+| Contato com decisão clínica | sim · não | `dec` booleano |
+| Modalidade | presencial · telemedicina · ambos (define R2) | `mod` `PRES`/`TELE`/`AMBOS` |
+| Estágio | ideia · protótipo · piloto · produção | `est` `IDEIA`/`PROTO`/`PILOTO`/`PROD` |
+| Fornecedor e região | qual provedor, qual endpoint, qual região | `forn`, texto livre |
+| Onde gravar | proponha `saidas/<slug>/`, em kebab-case, e confirme junto do resto | — |
 
 Regras da triagem:
 
@@ -167,11 +135,9 @@ Regras da triagem:
   adivinhado. O diretório de trabalho pode não ser o repositório do projeto, e
   frequentemente não é. Proponha o caminho, mostre-o por extenso e siga com o que
   o usuário confirmar. As fases 4 e 5 gravam nesse caminho, e em nenhum outro.
-- Se o material é só prosa, registre-o: **todo achado terá origem `declarado`**,
-  e o parecer diz isso na primeira linha.
-- Se há repositório, os achados de código são `observado`; os demais continuam
-  `declarado`. Um parecer pode misturar as duas origens — desde que cada achado
-  diga qual é a sua.
+- Só prosa: `alc` é `D`, e todo achado sai `D` ou `A`.
+- Com repositório: `alc` é `M`, achados de código são `O` com `arquivo:linha`, os
+  demais seguem `D` ou `A`.
 
 Feche a fase com o quadro de triagem preenchido, confirmado pelo usuário.
 
@@ -180,178 +146,140 @@ Feche a fase com o quadro de triagem preenchido, confirmado pelo usuário.
 ## Fase 2 — roteamento
 
 **A porta é uma só e fecha aqui.** Um arquivo entra quando cumpre as **duas**
-colunas: a condição da triagem *e* a premissa de escopo. Falhar qualquer uma o
-deixa de fora, e ficar de fora significa **não existir para o resto da
-execução** — sem gatilho, sem achado, sem linha de checklist. Aparece uma vez, em
-`premissas_afastadas`.
+colunas: a condição da triagem *e* a premissa de escopo. Ficar de fora significa
+não existir para o resto da execução. Liste os afastados em `afast`.
 
 | Arquivo | Condição da triagem | **E** premissa de escopo |
 |---|---|---|
-| `07-gatilhos-de-auditoria.md` | sempre | — |
-| `01-uso-clinico-de-llm` | contato com paciente ou decisão clínica | idem |
-| `02-custodia-de-dados-de-saude` | guarda, prazo, compartilhamento, prontuário | há dado de paciente sob guarda |
-| `03-escolha-de-fornecedor-e-regiao` | provedor externo, contrato, tráfego fora do Brasil | há dado de paciente indo ao fornecedor |
-| `04-seguranca-tecnica` | repositório, infra, log, credencial, incidente | há dado de saúde no sistema |
-| `05-responsabilidade-e-prova` | quem responde, prova de diligência | há dado de paciente, ou ato médico apoiado por IA |
-| `06-desenvolvimento-de-software` | código próprio | código tratando dado de paciente **ou chamando LLM** |
-| `08-desidentificacao` | alegação de anonimização, pseudonimização, uso secundário | idem |
-
-**Carregue apenas `07-gatilhos-de-auditoria.md`.** Os demais arquivos não são
-lidos inteiros: a coluna decide quais ficam *elegíveis*, e os blocos deles são
-buscados um a um na fase 3, depois que um gatilho dispara.
+| `01` uso clínico | contato com paciente ou decisão clínica | idem |
+| `02` custódia | guarda, prazo, compartilhamento, prontuário | há dado de paciente sob guarda |
+| `03` fornecedor | provedor externo, contrato, tráfego fora do Brasil | há dado de paciente indo ao fornecedor |
+| `04` segurança | repositório, infra, log, credencial, incidente | há dado de saúde no sistema |
+| `05` responsabilidade | quem responde, prova de diligência | há dado de paciente, ou ato médico apoiado por IA |
+| `06` desenvolvimento | código próprio | código tratando dado de paciente **ou chamando LLM** |
+| `08` desidentificação | alegação de anonimização ou pseudonimização | idem |
 
 Silêncio do material não supre premissa ausente. Se a triagem confirmou "nenhum
-dado de paciente", `04-seguranca-tecnica` fica de fora e o gatilho de `.env`
-versionado **não dispara** só porque ninguém falou do `.env`. Fazê-lo é disparar
-em arquitetura lícita, que a R6 proíbe.
+dado de paciente", o gatilho de `.env` versionado **não dispara** só porque
+ninguém falou do `.env`. Fazê-lo é disparar em arquitetura lícita, que a R6 proíbe.
 
 No `06` a premissa é alternativa: software que **integra LLM** entra sem dado de
 paciente. É por essa porta que os gatilhos de OWASP valem num projeto sem
 paciente nenhum.
 
+### Carregue o catálogo pelas seções que a triagem indicou
+
+```
+python3 ${CLAUDE_PLUGIN_ROOT}/ferramentas/gatilhos.py --tsv --secao <seção>...
+```
+
+`--secoes` lista as dez com a contagem. Escolha por tema, não por arquivo de
+diretriz: os ids de `Base` são compartilhados, então filtrar por arquivo elegível
+não filtra nada.
+
+| Seção | Deixe de fora quando |
+|---|---|
+| Envio de dado a LLM | — sempre entra |
+| Identificadores e desidentificação | não há dado de paciente |
+| Segredos e credenciais | não há repositório nem infraestrutura |
+| Logs e telemetria | não há repositório nem infraestrutura |
+| Criptografia e transporte | não há repositório nem infraestrutura |
+| Retenção e descarte | não há dado sob guarda |
+| Supervisão humana e registro clínico | não há contato com paciente nem decisão clínica |
+| Consentimento e recusa | não há dado de paciente |
+| Ambiente de teste | não há repositório |
+| Governança e classificação de risco | — sempre entra |
+
 Assunto que o corpus não cobre — outra jurisdição, dispositivo médico,
-ANVISA/SaMD, EU AI Act — entra em `fora_do_escopo`. **Não opine.** No campo
-`porque`, escreva só o que é específico daquele assunto: a frase sobre o que o
-corpus cobre é do renderer, e repeti-la duplica o texto no parecer.
+ANVISA/SaMD, EU AI Act — entra em `fora`, com o nome do assunto e nada mais.
+**Não opine.**
 
 ---
 
-## Fase 3 — varredura
+## Fase 3 — classificar
 
-### Passo 1 — percorrer os gatilhos
+Percorra as linhas do TSV contra o material. Cada linha é uma pergunta fechada:
+**este padrão está presente?**
 
-Percorra as linhas de `07-gatilhos-de-auditoria.md` cujo `Base` pertença a
-arquivo elegível pela fase 2. A tabela já traz `Gatilho`, `Severidade`, `Base` e
-`O que checar` — é ela que decide o achado.
+**Com repositório.** `Grep` e `Glob` sobre os padrões observáveis da coluna
+`gatilho` — nomes de campo, chamadas de API, `.env`, logging de payload, região
+de endpoint. Achado é `O`, com `arquivo:linha`.
 
-**Com repositório.** `Grep` e `Glob` sobre os padrões observáveis: nomes de campo
-(`cpf`, `prontuario`, `nome_paciente`, `cns`), chamadas de API, `.env`, logging
-de payload, região de endpoint. Achado é `observado`, com arquivo e linha.
+**Com prosa.** De cada linha, a descrição afirma, nega ou omite o padrão?
+Afirma → `D`. Nega → sem achado. Omite → `A`, e vira pergunta.
 
-**Com prosa.** De cada gatilho, pergunte se a descrição afirma, nega ou omite o
-padrão. Afirma → `declarado`. Nega → sem achado. Omite → `ausente`, vira pergunta.
+Um gatilho dispara **no máximo uma vez**. Se o padrão aparece em três lugares do
+código, é um achado com a evidência mais forte, não três.
 
-### Passo 2 — carregar o que os gatilhos pediram
-
-Dois lookups, em lote, só sobre o que disparou.
-
-Dispositivos, para severidade e ementa:
+Só quando a diretriz precisar decidir escalonamento:
 
 ```
-python3 ${CLAUDE_PLUGIN_ROOT}/ferramentas/citar.py --campos ementa,severidade <ID>...
+python3 ${CLAUDE_PLUGIN_ROOT}/ferramentas/diretriz.py --campos escalar,leitura uso-clinico:D3
 ```
 
-Blocos de diretriz, para `Escalar se` e `Leitura adotada`:
-
-```
-python3 ${CLAUDE_PLUGIN_ROOT}/ferramentas/diretriz.py --campos escalar,leitura uso-clinico:D3 seguranca:D7
-```
-
-`--listar` mostra os 94 blocos com título. Peça vários ids numa chamada só.
-Acrescente `verificar` **apenas** quando o `O que checar` do gatilho não bastar.
-
-**Não peça `literal`.** O texto da norma não entra no seu output — quem o injeta
-é o renderer, pelo id de `decide`. Pedir literal gasta contexto sem destino.
-
-Sem `python3`, opere em modo degradado: registre os ids, não invente severidade,
-e diga no campo `alcance` que o corpus não foi carregado.
+**Não chame `citar.py`.** O literal da norma não entra no seu output — o renderer
+o busca pelo id. Carregá-lo gasta contexto sem destino.
 
 ---
 
 ## Fase 4 — emitir `achados.json`
 
-Grave **um arquivo**, `achados.json`, no caminho confirmado na triagem. Não
-escreva markdown: `render_parecer.py` produz o parecer e o checklist a partir
-deste JSON.
+Grave **um arquivo**, no caminho confirmado na triagem. Só variáveis:
 
 ```json
-{
-  "projeto": "<nome curto>",
-  "alcance": "observado | declarado | misto",
-  "triagem": {"material":"", "dado":"", "papel":"", "decisao_clinica":"",
-              "modalidade":"", "estagio":"", "fornecedor":"", "regiao":""},
-  "premissas_afastadas": [{"arquivo":"08-desidentificacao", "porque":""}],
-  "achados": [
-    {"id":"2.1", "titulo":"<linguagem de conformidade, não de código>",
-     "severidade":"bloqueante", "origem":"observado|declarado|ausente",
-     "situacao":"confirmado|pergunta",
-     "base":["CEM:art73","CP:art154"], "decide":"CEM:art73",
-     "texto":"duas ou três frases, sem jargão de código",
-     "leitura_adotada": null,
-     "checar":"<pergunta do gatilho>",
-     "acao":{"ti":"", "fornecedor":"", "registrar":""},
-     "evidencia":{"arquivo":"app.py","linha":"57-61"}}
-  ],
-  "checklist": [
-    {"diretriz":"uso-clinico:D3", "exigencia":"", "status":"lacuna",
-     "origem":"observado", "base":["CFM-2454-2026:art4"], "proximo":""}
-  ],
-  "fornecedor": ["<pergunta direta e respondível>"],
-  "ti": ["<requisito verificável>"],
-  "registrar": ["<classe A/B/C da R4>"],
-  "fora_do_escopo": [{"assunto":"FDA", "porque":"o corpus cobre Brasil"}],
-  "escalar": [{"item":"", "para":"jurídico|responsável técnico", "porque":""}]
-}
+{"p":"escriba de consulta em cardiologia",
+ "alc":"D",
+ "tri":{"mat":"P","dado":"ID","papel":"GTC","dec":false,"mod":"PRES","est":"PROD",
+        "forn":"OpenAI ChatGPT, plano pessoal; região não declarada"},
+ "afast":["06","08"],
+ "a":[["G02","D","C",null],
+      ["G31","O","C","app.py:57-61"],
+      ["G68","A","P",null]],
+ "esc":[["escriba de consulta, não classificado em nível de risco","JUR"]],
+ "fora":["FDA","EU AI Act"]}
 ```
 
-Regras do formato, todas verificadas por `validar_parecer.py`:
+Vocabulário, e nada fora dele:
 
-- `id` é `N.N`. `N` é **2** para `bloqueante` e **3** para `risco`. A sequência é
-  contínua dentro da seção, atravessando confirmados e perguntas.
-- `decide` é o dispositivo que **decide** o ponto, e tem de estar em `base`. É
-  dele que o renderer tira o literal, a URL e a data.
-- `evidencia` só quando `origem` é `observado`. Vai para o anexo, não para o
-  corpo.
-- `situacao` sai da tabela da regra 3: `observado` ou `declarado` que afirma o
-  padrão → `confirmado`; só `ausente` → `pergunta`.
-- `checklist` traz uma linha por diretriz dos arquivos elegíveis na fase 2 — não
-  dos oito. Diretriz cumprida também entra. `nao-aplicavel` é para diretriz de
-  arquivo **elegível** cujo gatilho não disparou, e a linha traz a justificativa
-  em `proximo`.
-- `alcance` `declarado` proíbe qualquer `conforme-verificado`.
-- Todo achado com `situacao` `pergunta` tem linha `indeterminado` no checklist. O
-  inverso não é exigido.
+| campo | valores |
+|---|---|
+| `alc` | `O` observado · `D` declarado · `M` misto |
+| `mat` | `R` repositório · `C` contrato/documentação · `P` prosa · `X` combinação |
+| `dado` | `ID` identificado · `PS` pseudonimizado · `AN` anonimizado alegado · `SI` sintético · `NA` nenhum |
+| `papel` | `ADC` apoio à decisão · `GTC` geração de texto clínico · `TRI` triagem · `COM` comunicação · `ADM` administrativo · `PES` pesquisa |
+| `mod` | `PRES` · `TELE` · `AMBOS` |
+| `est` | `IDEIA` · `PROTO` · `PILOTO` · `PROD` |
+| `afast` | `01` `02` `03` `04` `05` `06` `08` |
+| destino em `esc` | `RT` responsável técnico · `JUR` jurídico |
 
-Você **não** escreve texto de norma. Não há campo para isso, e é proposital: o
-literal vem do corpus pelo id, não da sua memória.
+`a` é uma lista de tuplas `[gatilho, origem, situação, evidência]`. Evidência é
+`arquivo:linha` quando a origem é `O`, e `null` nas outras.
+
+Escreva compacto, sem indentação. Não há campo de texto livre além de `p`,
+`forn`, o item de `esc` e o assunto em `fora`.
 
 ---
 
-## Fase 5 — renderizar
+## Fase 5 — renderizar e conferir
 
 ```
+python3 ${CLAUDE_PLUGIN_ROOT}/ferramentas/validar_parecer.py <saida>/achados.json
 python3 ${CLAUDE_PLUGIN_ROOT}/ferramentas/render_parecer.py <saida>/achados.json \
   --saida <saida> --hoje <AAAA-MM-DD>
 ```
 
-Produz `parecer-conformidade.md` e `checklist-conformidade.md`. Data, versão do
-corpus e literais saem do `VERSAO.md` e das fichas. Se o comando avisar que falta
-literal para algum id, o `decide` está errado — corrija o JSON e rode de novo.
+O validador confere vocabulário, existência dos gatilhos, o par origem/situação,
+evidência e repetição. Corrija até sair 0, depois renderize.
 
 ---
 
 ## Antes de entregar
 
-`validar_parecer.py` confere sozinho: campos obrigatórios, vocabulário, ids
-existentes, severidade acima da base, `decide` dentro de `base`, numeração `N.N`
-por seção, `ausente` que virou `confirmado`, `conforme-verificado` com origem
-declarada, teto do `alcance` e pareamento com o checklist. Não gaste turno
-reconferindo isso.
+O validador cobre quase tudo. Confira à mão só o que script nenhum alcança:
 
-Rode e corrija até sair 0:
-
-```
-python3 ${CLAUDE_PLUGIN_ROOT}/ferramentas/validar_parecer.py <saida>/achados.json
-```
-
-Confira à mão só o que script nenhum alcança:
-
-1. Cada severidade foi **copiada** do gatilho, não atribuída por parecer grave?
-2. Onde gatilho e ficha divergiram, prevaleceu a do gatilho?
-3. Item sem gatilho e sem ficha ficou **sem severidade**?
-4. `base` reproduz o campo `Base` do gatilho que disparou, sem id acrescentado
-   para reforçar o argumento?
-5. A vigência da 2.454 foi aplicada conforme R1?
-6. Assunto fora do corpus foi para `fora_do_escopo`, sem opinião?
-7. Todo `Escalar se` acionado está em `escalar`, sem decisão tomada?
-8. O `checklist` só tem linhas de arquivo elegível na fase 2?
+1. Cada gatilho que você marcou está mesmo presente no material, e não foi
+   marcado por parecer provável?
+2. Padrão que o catálogo não cobre ficou fora dos achados?
+3. A vigência da 2.454 foi aplicada conforme R1?
+4. Assunto fora do corpus foi para `fora`, sem opinião?
+5. Todo `Escalar se` acionado está em `esc`, sem decisão tomada?

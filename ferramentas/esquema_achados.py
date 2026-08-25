@@ -1,95 +1,81 @@
 #!/usr/bin/env python3
-"""Esquema do achados.json — contrato entre a skill e o renderer.
+"""Esquema do achados.json — vocabulario fechado.
 
-O modelo emite DADOS. O renderer produz o documento. A divisao existe por dois
-motivos, um de custo e um de correcao:
+O modelo le o projeto, CLASSIFICA dentro do catalogo e devolve so as variaveis.
+Nao escreve prosa: nem titulo, nem analise, nem mitigacao. Tudo isso vem do
+catalogo pelo id do gatilho.
 
-  custo    — 20,3% do parecer era literal de norma que o citar.py acabou de
-             devolver, reemitido como saida a $25/1M. Mais 73,8% de prosa, boa
-             parte dela boilerplate deterministico. O modelo passa a emitir so
-             o que so ele sabe: qual gatilho disparou, com que evidencia.
+Por que fechado. Medicao sobre os quatro casos, no formato anterior:
 
-  correcao — o validar_parecer.py tem onze conferencias e nenhuma compara o
-             texto citado com o corpus. Parecer que parafraseasse a norma de
-             memoria, com id e URL certos, passava. Com o literal injetado pelo
-             renderer a partir do id, parafrasear deixa de ser possivel.
+  - `checar`, `base` e `severidade` eram copia LITERAL do catalogo em 100% dos
+    achados (4/4, 27/27, 41/41, 28/28)
+  - `checklist.exigencia` tinha similaridade 0,96 com o titulo da diretriz
+  - `decide` estava sempre dentro de `base[]`, sem uma excecao
+  - 56 a 89% das linhas de checklist eram `nao-aplicavel` ou `indeterminado`,
+    cada uma com ~100 caracteres de justificativa em prosa
+  - 55 a 60% dos bytes nao passavam por conferencia nenhuma
 
-Campos obrigatorios e vocabulario fechado ficam aqui, num lugar so, lidos pelo
-renderer e pelo validador.
+O achado e uma TUPLA POSICIONAL de quatro: [gatilho, origem, situacao, evidencia].
+Objeto com nome de campo custaria ~4x mais em 77 linhas, e nao ha campo opcional
+que justifique.
+
+Efeito colateral maior que o de custo: o texto do parecer passa a ser
+deterministico. O T6 mediu Jaccard de 0,75 a 0,85 entre execucoes; a partir daqui
+o que varia e apenas QUAIS gatilhos dispararam, que e o julgamento, e e o que
+deve variar.
 """
 
-SEVERIDADES = ["bloqueante", "risco", "boa-prática"]
-ORIGENS = ["observado", "declarado", "ausente"]
-SITUACOES = ["confirmado", "pergunta"]
-STATUS = ["conforme-verificado", "conforme-declarado", "lacuna",
-          "nao-aplicavel", "indeterminado"]
+# --- vocabulario fechado -----------------------------------------------------
 
-# Campos da triagem, na ordem em que saem na secao 1.
-TRIAGEM = ["material", "dado", "papel", "decisao_clinica", "modalidade",
-           "estagio", "fornecedor", "regiao"]
+ORIGEM = {"O": "observado", "D": "declarado", "A": "ausente"}
+SITUACAO = {"C": "confirmado", "P": "pergunta"}
+ALCANCE = {"O": "observado", "D": "declarado", "M": "misto"}
 
-RAIZ_OBRIGATORIA = ["projeto", "alcance", "triagem", "achados", "checklist"]
-ACHADO_OBRIGATORIO = ["id", "titulo", "severidade", "origem", "situacao",
-                      "base", "decide", "texto"]
-LINHA_OBRIGATORIA = ["diretriz", "exigencia", "status"]
+# Triagem. Cada campo e enum; `forn` e livre porque nome de produto nao se cataloga.
+MATERIAL = {"R": "repositório", "C": "contrato ou documentação",
+            "P": "descrição em prosa", "X": "combinação"}
+DADO = {"ID": "identificado", "PS": "pseudonimizado", "AN": "anonimizado alegado",
+        "SI": "sintético", "NA": "nenhum dado de paciente"}
+PAPEL = {"ADC": "apoio à decisão clínica", "GTC": "geração de texto clínico",
+         "TRI": "triagem", "COM": "comunicação com paciente",
+         "ADM": "administrativo", "PES": "pesquisa"}
+MODALIDADE = {"PRES": "presencial", "TELE": "telemedicina", "AMBOS": "ambos"}
+ESTAGIO = {"IDEIA": "ideia", "PROTO": "protótipo", "PILOTO": "piloto",
+           "PROD": "produção"}
+DESTINO = {"RT": "responsável técnico", "JUR": "jurídico"}
 
-# `alcance` governa o teto do checklist: material so declarado nao produz
-# conforme-verificado. Regra 3 da skill.
-ALCANCES = ["observado", "declarado", "misto"]
+TRIAGEM = [("mat", MATERIAL), ("dado", DADO), ("papel", PAPEL),
+           ("mod", MODALIDADE), ("est", ESTAGIO)]
+
+ROTULO_TRIAGEM = {
+    "mat": "Material recebido", "dado": "Tipo de dado", "papel": "Papel da IA",
+    "dec": "Contato com decisão clínica", "mod": "Modalidade",
+    "est": "Estágio", "forn": "Fornecedor e região",
+}
+
+# Arquivos de diretriz, pelo numero. `afast` lista os que a triagem afastou.
+ARQUIVOS = {
+    "01": "uso clínico de LLM", "02": "custódia de dados de saúde",
+    "03": "escolha de fornecedor e região", "04": "segurança técnica",
+    "05": "responsabilidade e prova", "06": "desenvolvimento de software",
+    "08": "desidentificação",
+}
+
+RAIZ_OBRIGATORIA = ["p", "alc", "tri", "a"]
+
+# --- exemplo -----------------------------------------------------------------
 
 EXEMPLO = {
-    "projeto": "escriba de consulta em consultorio de cardiologia",
-    "alcance": "declarado",
-    "triagem": {
-        "material": "descrição em prosa",
-        "dado": "identificado (nome, data de nascimento, conteúdo clínico)",
-        "papel": "geração de texto clínico — transcrição e escriba",
-        "decisao_clinica": "não decide conduta; produz o registro que o médico assina",
-        "modalidade": "presencial (define a aplicação da R2)",
-        "estagio": "produção, há cerca de dois meses",
-        "fornecedor": "OpenAI, ChatGPT, plano pessoal de consumidor",
-        "regiao": "não declarada",
-    },
-    "premissas_afastadas": [
-        {"arquivo": "08-desidentificacao",
-         "porque": "não há alegação de anonimização nem de pseudonimização"}
-    ],
-    "achados": [
-        {
-            "id": "2.1",
-            "titulo": "Conta pessoal de consumidor recebendo dado identificável de paciente",
-            "severidade": "bloqueante",
-            "origem": "declarado",
-            "situacao": "confirmado",
-            "base": ["CEM:art73", "PROV:comparativo"],
-            "decide": "CEM:art73",
-            "texto": "O áudio da consulta, com nome e data de nascimento, é enviado a "
-                     "produto de consumidor cujo contrato não é o do CNPJ.",
-            "leitura_adotada": None,
-            "checar": "qual contrato ampara o tratamento, e em nome de quem",
-            "acao": {
-                "ti": "cortar o caminho até a conta pessoal",
-                "fornecedor": "exigir contrato corporativo com cláusula de não treino",
-                "registrar": "a base legal por finalidade, com data",
-            },
-            "evidencia": None,
-        }
-    ],
-    "checklist": [
-        {"diretriz": "uso-clinico:D3",
-         "exigencia": "registro do uso de IA no prontuário",
-         "status": "lacuna", "origem": "observado",
-         "base": ["CFM-2454-2026:art4"],
-         "proximo": "exigir campo próprio e versionamento do modelo"}
-    ],
-    "fornecedor": ["A empresa treina modelo com o conteúdo enviado?"],
-    "ti": ["Cortar qualquer caminho do consultório à conta pessoal."],
-    "registrar": ["Consentimento específico para o uso de IA — classe A da R4."],
-    "fora_do_escopo": [
-        {"assunto": "FDA", "porque": "o corpus cobre Brasil"}
-    ],
-    "escalar": [
-        {"item": "enquadramento como agente de pequeno porte",
-         "para": "jurídico", "porque": "leitura não pacificada"}
-    ],
+    "p": "escriba de consulta em consultório de cardiologia",
+    "alc": "D",
+    "tri": {"mat": "P", "dado": "ID", "papel": "GTC", "dec": False,
+            "mod": "PRES", "est": "PROD",
+            "forn": "OpenAI ChatGPT, plano pessoal de consumidor; região não declarada"},
+    "afast": ["06", "08"],
+    "a": [["G02", "D", "C", None],
+          ["G18", "D", "C", None],
+          ["G51", "A", "P", None],
+          ["G68", "A", "P", None]],
+    "esc": [["escriba e transcrição de consulta, não classificados em nível de risco", "JUR"]],
+    "fora": ["FDA", "EU AI Act"],
 }

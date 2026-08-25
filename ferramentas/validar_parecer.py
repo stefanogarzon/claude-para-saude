@@ -111,20 +111,21 @@ def blocos_de_achado(texto):
                   (num.group(2) if num else titulo), corpo[m.start():f]
 
 
-def validar_json(caminho, sev, conf):
-    """Confere o achados.json — o formato que a skill emite desde a v0.2.
+def validar_json(caminho, sev, conf, catalogo=None):
+    """Confere o achados.json de vocabulario fechado.
 
-    Mais estrito que a versao markdown, e por dois motivos. Primeiro, nao ha
-    parser: campo ausente e campo ausente, nao "a regex nao casou". Segundo, o
-    modelo nao emite mais o literal da norma — quem o injeta e o
-    render_parecer.py, lendo o corpus pelo id em `decide` —, entao a conferencia
-    de fidelidade do texto deixa de ser necessaria: ela virou impossivel de
-    falhar por construcao. Era o unico buraco que as onze conferencias do
-    markdown nao cobriam.
+    Quase tudo e verificavel, ao contrario do formato anterior, em que 55 a 60%
+    dos bytes eram prosa livre sem conferencia nenhuma. Aqui o modelo so escolhe
+    dentro de conjuntos fechados, e escolha fora do conjunto e erro, nao estilo.
+
+    A conferencia de severidade sumiu, e sumiu por construcao: a severidade nao
+    e mais emitida pelo modelo — vem do catalogo pelo id do gatilho. Inflar
+    severidade deixou de ser possivel.
     """
-    from esquema_achados import (SEVERIDADES, ORIGENS, SITUACOES, STATUS,
-                                 ALCANCES, RAIZ_OBRIGATORIA,
-                                 ACHADO_OBRIGATORIO, LINHA_OBRIGATORIA)
+    import gatilhos as G
+    from esquema_achados import (ORIGEM, SITUACAO, ALCANCE, MATERIAL, DADO,
+                                 PAPEL, MODALIDADE, ESTAGIO, DESTINO, ARQUIVOS,
+                                 RAIZ_OBRIGATORIA)
     problemas, avisos = [], []
     d = json.load(io.open(caminho, encoding="utf-8"))
 
@@ -134,99 +135,83 @@ def validar_json(caminho, sev, conf):
     if problemas:
         return d, problemas, avisos
 
-    if d["alcance"] not in ALCANCES:
-        problemas.append(f"alcance invalido: {d['alcance']}")
+    cat = G.carregar(catalogo or os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "corpus", "diretrizes", "07-gatilhos-de-auditoria.md"))
+    idx = {g["id"]: g for g in cat}
 
-    contagem_sev = collections.Counter()
-    contagem_sit = collections.Counter()
+    if d["alc"] not in ALCANCE:
+        problemas.append(f"alcance fora do vocabulario: {d['alc']!r}")
+
+    tri = d.get("tri") or {}
+    for campo, mapa, nome in (("mat", MATERIAL, "material"), ("dado", DADO, "dado"),
+                              ("papel", PAPEL, "papel"), ("mod", MODALIDADE, "modalidade"),
+                              ("est", ESTAGIO, "estagio")):
+        if campo not in tri:
+            problemas.append(f"triagem: falta `{campo}`")
+        elif tri[campo] not in mapa:
+            problemas.append(f"triagem: {nome} fora do vocabulario: {tri[campo]!r} "
+                             f"(vale {'/'.join(sorted(mapa))})")
+    if "dec" in tri and not isinstance(tri["dec"], bool):
+        problemas.append("triagem: `dec` tem de ser booleano")
+
+    for x in (d.get("afast") or []):
+        if x not in ARQUIVOS:
+            problemas.append(f"afast: arquivo desconhecido {x!r}")
+
+    vistos = collections.Counter()
+    sevs = collections.Counter()
     perguntas = 0
-
-    for a in d["achados"]:
-        rot = a.get("id", "?")
-        for c in ACHADO_OBRIGATORIO:
-            if not a.get(c):
-                problemas.append(f"achado {rot}: falta `{c}`")
-        s = (a.get("severidade") or "").split()[0] if a.get("severidade") else ""
-        if s and s not in SEVERIDADES:
-            problemas.append(f"achado {rot}: severidade invalida {s!r}")
-        contagem_sev[s] += 1
-        if a.get("origem") not in ORIGENS:
-            problemas.append(f"achado {rot}: origem invalida {a.get('origem')!r}")
-        if a.get("situacao") not in SITUACOES:
-            problemas.append(f"achado {rot}: situacao invalida {a.get('situacao')!r}")
-        contagem_sit[a.get("situacao")] += 1
-        if a.get("situacao") == "pergunta":
-            perguntas += 1
-        # 5 — origem `ausente` nunca vira constatacao
-        if a.get("origem") == "ausente" and a.get("situacao") == "confirmado":
-            problemas.append(f"achado {rot}: origem `ausente` com situacao "
-                             f"`confirmado` — e pergunta, nao constatacao")
-        # 9 — numeracao N.N, e a secao bate com a severidade
-        if not re.match(r"^\d+\.\d+$", str(rot)):
-            problemas.append(f"achado {rot}: id fora do formato N.N")
+    for i, t in enumerate(d["a"]):
+        rot = f"achado[{i}]"
+        if not isinstance(t, list) or not (3 <= len(t) <= 4):
+            problemas.append(f"{rot}: tem de ser [gatilho, origem, situacao, evidencia]")
+            continue
+        gid, ori, sit = t[0], t[1], t[2]
+        ev = t[3] if len(t) > 3 else None
+        if gid not in idx:
+            problemas.append(f"{rot}: gatilho inexistente no catalogo — {gid}")
         else:
-            secao = rot.split(".")[0]
-            esperada = {"bloqueante": "2", "risco": "3"}.get(s)
-            if esperada and secao != esperada:
-                problemas.append(f"achado {rot}: severidade {s} pede secao "
-                                 f"{esperada}, nao {secao}")
-        # 1, 2, 3 — ids existem, sao citaveis, e a severidade nao passa da base
-        bases = a.get("base") or []
-        for b in bases:
-            if b not in sev:
-                problemas.append(f"achado {rot}: id inexistente no corpus — {b}")
-            elif conf.get(b) and conf[b] != "primária-conferida":
-                avisos.append(f"achado {rot}: {b} e {conf[b]}, exige ressalva")
-        conhecidas = [sev[b] for b in bases if b in sev and sev[b] in ORDEM]
-        if s in ORDEM and conhecidas:
-            teto = max(ORDEM[x] for x in conhecidas)
-            if ORDEM[s] > teto:
-                problemas.append(f"achado {rot}: severidade {s} acima da maior "
-                                 f"das bases")
-        # 10 — `decide` tem de estar entre as bases: e dele que sai o literal
-        if a.get("decide") and a["decide"] not in bases:
-            problemas.append(f"achado {rot}: `decide` {a['decide']} nao esta em "
-                             f"`base` — o renderer citaria norma que o achado "
-                             f"nao invoca")
+            sevs[idx[gid]["severidade"].split()[0]] += 1
+            for b in idx[gid]["base"]:
+                if b not in sev:
+                    problemas.append(f"{rot}: gatilho {gid} cita id inexistente "
+                                     f"no corpus — {b} (erro do CORPUS)")
+                elif conf.get(b) and conf[b] != "primária-conferida":
+                    avisos.append(f"{rot}: {b} e {conf[b]}, exige ressalva")
+        vistos[gid] += 1
+        if ori not in ORIGEM:
+            problemas.append(f"{rot}: origem fora do vocabulario: {ori!r}")
+        if sit not in SITUACAO:
+            problemas.append(f"{rot}: situacao fora do vocabulario: {sit!r}")
+        if sit == "P":
+            perguntas += 1
+        # origem `ausente` nunca e constatacao — regra 3
+        if ori == "A" and sit == "C":
+            problemas.append(f"{rot}: origem `ausente` com situacao `confirmado` "
+                             f"— e pergunta, nao constatacao")
+        # evidencia so faz sentido no que foi observado, e e obrigatoria la
+        if ori == "O" and not ev:
+            problemas.append(f"{rot}: origem `observado` sem evidencia")
+        if ori != "O" and ev:
+            problemas.append(f"{rot}: evidencia com origem `{ori}` — so `O` tem "
+                             f"arquivo e linha")
 
-    linhas = d["checklist"]
-    cont_status = collections.Counter()
-    for l in linhas:
-        rot = l.get("diretriz", "?")
-        for c in LINHA_OBRIGATORIA:
-            if not l.get(c):
-                problemas.append(f"checklist {rot}: falta `{c}`")
-        st = l.get("status")
-        if st not in STATUS:
-            problemas.append(f"checklist {rot}: status invalido {st!r}")
-        cont_status[st] += 1
-        # 6 — conformidade declarada nao e conformidade
-        if st == "conforme-verificado" and l.get("origem") in ("declarado", "ausente"):
-            problemas.append(f"checklist {rot}: `conforme-verificado` com origem "
-                             f"`{l.get('origem')}`")
-        for b in (l.get("base") or []):
-            if b not in sev:
-                problemas.append(f"checklist {rot}: id inexistente — {b}")
+    for gid, n in vistos.items():
+        if n > 1:
+            problemas.append(f"gatilho {gid} repetido {n} vezes — um gatilho, um achado")
 
-    # 7 — material so declarado tem teto `conforme-declarado`
-    if d["alcance"] == "declarado" and cont_status.get("conforme-verificado"):
-        problemas.append(f"alcance `declarado` com "
-                         f"{cont_status['conforme-verificado']} linha(s) "
-                         f"`conforme-verificado` — o teto e `conforme-declarado`")
+    for e in (d.get("esc") or []):
+        if not isinstance(e, list) or len(e) != 2:
+            problemas.append(f"escalar: {e!r} — tem de ser [item, destino]")
+        elif e[1] not in DESTINO:
+            problemas.append(f"escalar: destino fora do vocabulario: {e[1]!r}")
 
-    # 11 — pareamento unidirecional da regra 3
-    indet = cont_status.get("indeterminado", 0)
-    if indet < perguntas:
-        problemas.append(f"pareamento: {perguntas} achado(s) com situacao "
-                         f"`pergunta` para {indet} linha(s) `indeterminado`")
-
-    # 0 — validador que nao encontra nada tem de gritar
-    if not d["achados"]:
+    if not d["a"]:
         problemas.append("nenhum achado no JSON")
 
-    print(f"achados: {len(d['achados'])} · severidades {dict(contagem_sev)} · "
-          f"situacao {dict(contagem_sit)}")
-    print(f"checklist: {len(linhas)} linhas · {dict(cont_status)}")
+    print(f"achados: {len(d['a'])} · severidades {dict(sevs)} · "
+          f"perguntas {perguntas} · gatilhos distintos {len(vistos)}")
     return d, problemas, avisos
 
 
