@@ -36,6 +36,13 @@ import os
 import re
 import sys
 
+# Caminhos relativos ao MODULO, nunca ao diretorio de trabalho. A skill roda no
+# diretorio do usuario, nao no do plugin: default relativo faz o script abortar
+# na maquina de quem instala. Nao foi visto por meses porque o eval sempre rodou
+# com cwd na raiz do repo — mesma classe do bug de --allowedTools, em que o
+# harness afrouxava o ambiente e media um produto que ninguem recebe.
+RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 ORDEM = {"boa-prática": 0, "risco": 1, "bloqueante": 2}
 
 # O prefixo tem de ser MAIUSCULO. Os 20 prefixos do corpus sao todos assim —
@@ -220,7 +227,8 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("parecer")
     ap.add_argument("checklist", nargs="?")
-    ap.add_argument("--fichas", default="corpus/fichas")
+    ap.add_argument("--fichas", default=os.environ.get(
+        "CORPUS_FICHAS", os.path.join(RAIZ, "corpus", "fichas")))
     args = ap.parse_args()
 
     sev, conf = carregar_corpus(args.fichas)

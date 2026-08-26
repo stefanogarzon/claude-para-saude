@@ -9,7 +9,7 @@ verificado: 2026-08-11
 
 Quem responde pelo uso de IA sobre dado de paciente, em quais esferas, e o que precisa estar registrado para provar diligência.
 
-> Parte destas diretrizes decorre da Res. CFM 2.454/2026, em vigor a partir de 26/08/2026. Até essa data, o regime é o Código de Ética Médica, as Res. CFM 1.821/2007 e 2.314/2022 e a Lei 13.709/2018.
+> Parte destas diretrizes decorre da Res. CFM 2.454/2026, **em vigor desde 26/08/2026**. Elas são exigência corrente. Cada diretriz traz a resolução no campo `Base`, ao lado das demais normas que a sustentam.
 
 ## D1 — Trate as quatro camadas de responsabilidade como simultâneas
 
@@ -25,8 +25,6 @@ Quem responde pelo uso de IA sobre dado de paciente, em quais esferas, e o que p
 **Escalar se.** O caso depender do efeito de uma decisão criminal sobre as demais esferas: esse efeito não está no corpus.
 
 ## D2 — Trate a responsabilidade pelo ato médico como intransferível por contrato
-
-> Vale a partir de 26/08/2026.
 
 A decisão clínica é do médico: ver `uso-clinico:D1`. No campo ético-profissional o médico permanece responsável pelo ato praticado com apoio de IA, e o CRM a apura. Contrato com fornecedor, cláusula de limitação e certificação de produto não a afastam, e a sanção ética corre sem prejuízo da civil e da penal. Perante o paciente nenhum contrato transfere responsabilidade; entre os contratantes ele define apenas quem paga ao final, por regresso.
 
@@ -186,8 +184,6 @@ O reporte de falha, risco e uso inadequado de IA é `uso-clinico:D13`. Incidente
 **Escalar se.** O serviço pretender usar o prazo em dobro do agente de pequeno porte: o enquadramento não está pacificado no uso de LLM sobre dado sensível.
 
 ## D14 — Construa a prova exigida pela proteção contra falha do sistema
-
-> Vale a partir de 26/08/2026.
 
 No âmbito ético-disciplinar, o CRM só reconhece a proteção do médico contra responsabilização por falha atribuível exclusivamente ao sistema mediante prova de uso diligente, crítico e ético. A proteção de quem não segue a orientação da ferramenta é condicionada do mesmo modo. Nas esferas civil e penal essa proteção não é oponível: a resolução ressalva as duas. Sem registro de entrada, saída, versão do modelo, revisão humana e fundamento da decisão, a condição não se prova. O exercício desses direitos perante fornecedor e instituição é `uso-clinico:D9`.
 

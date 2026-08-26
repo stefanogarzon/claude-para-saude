@@ -9,7 +9,7 @@ verificado: 2026-08-11
 
 Diretrizes sobre o que o médico pode e não pode fazer ao usar LLM ou qualquer sistema de IA no cuidado de paciente. Escrito para o médico assistente e para o responsável técnico do serviço. O que depende de código ou de configuração é exigência a fazer à TI ou ao fornecedor; o critério técnico está em `desenvolvimento:D3`.
 
-> Parte destas diretrizes decorre da Res. CFM 2.454/2026, em vigor a partir de 26/08/2026. Até essa data, o regime é o Código de Ética Médica, as Res. CFM 1.821/2007 e 2.314/2022 e a Lei 13.709/2018.
+> Parte destas diretrizes decorre da Res. CFM 2.454/2026, **em vigor desde 26/08/2026**. Elas são exigência corrente. Cada diretriz traz a resolução no campo `Base`, ao lado das demais normas que a sustentam.
 
 ## D1 — Mantenha a decisão clínica com o médico
 
@@ -43,8 +43,6 @@ Não delegue à IA a comunicação de diagnóstico, prognóstico ou decisão ter
 
 ## D3 — Registre o uso de IA no prontuário
 
-> Vale a partir de 26/08/2026.
-
 Todo uso de IA como apoio à decisão médica entra no prontuário do paciente. O registro traz ferramenta, versão, finalidade e confirmação de que houve revisão médica. O dever não depende de a IA ter sido determinante para a conduta.
 
 **Base.** CFM-2454-2026:art4 · CEM:art87
@@ -58,8 +56,6 @@ Todo uso de IA como apoio à decisão médica entra no prontuário do paciente. 
 **Escalar se.** O sistema não grava a versão do modelo usada em cada chamada.
 
 ## D4 — Informe o paciente e ofereça caminho alternativo funcional
-
-> Vale a partir de 26/08/2026.
 
 Informe o paciente, em linguagem acessível, sempre que usar IA no cuidado dele. Explique que o sistema apoia o médico e não substitui a decisão humana. Respeite a recusa. O serviço precisa conseguir atender o paciente que recusa a IA. Em telemedicina, o consentimento de uso de IA é separado do consentimento de atendimento e de transmissão de imagens e dados, que já é exigido desde a Res. 2.314/2022.
 
@@ -137,8 +133,6 @@ O médico responde por orientar auxiliares, residentes e estagiários quanto ao 
 
 ## D9 — Use apenas sistema conforme, e registre o motivo da recusa
 
-> Vale a partir de 26/08/2026.
-
 Use apenas sistema de IA que atenda às normas éticas, técnicas, legais e regulatórias vigentes no país. Esse é o dever. Como direito, recuse sistema sem validação científica adequada, sem certificação regulatória pertinente ou que contrarie princípios éticos, técnicos e legais da medicina, e exija do fornecedor informação clara sobre funcionamento, finalidades, limitações, riscos e grau de evidência. Não siga sugestão de IA de forma automática. Desligue a ferramenta quando julgar inadequada para a situação, e registre a decisão. A proteção contra penalização depende de atuação conforme os preceitos técnicos e éticos.
 
 **Base.** CFM-2454-2026:art4 · CFM-2454-2026:art3 · CFM-2454-2026:art18 · CFM-2454-2026:art19
@@ -194,8 +188,6 @@ A proteção do médico contra responsabilização por falha do sistema depende 
 **Escalar se.** A retenção da trilha depende do provedor e o serviço não consegue manter cópia própria.
 
 ## D13 — Reporte falha e reavalie o sistema em uso
-
-> Vale a partir de 26/08/2026.
 
 Comunique às instâncias competentes falhas, riscos relevantes e usos inadequados de IA que possam comprometer a segurança do paciente ou a qualidade da assistência. Esse dever é do médico, e o serviço mantém canal e registro para isso. Quem desenvolve ou contrata o sistema, médico ou instituição, monitora o desempenho das saídas com resultados estratificados por grupo populacional e corrige viés detectado. Em caso grave em que o viés não possa ser eliminado, o sistema é descontinuado. A avaliação e a reavaliação do nível de risco e a auditoria especializada são da instituição médica.
 

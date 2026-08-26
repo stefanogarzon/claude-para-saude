@@ -32,7 +32,7 @@ import sys
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PADRAO = os.path.join(RAIZ, "corpus", "diretrizes", "07-gatilhos-de-auditoria.md")
 
-COLUNAS = ["id", "gatilho", "severidade", "base", "checar", "mitigacao"]
+VIGENCIA = {"CFM-2454-2026": "2026-08-26"}
 RE_ID = re.compile(r"^G\d{2}$")
 
 
@@ -49,19 +49,38 @@ def carregar(caminho):
         if not (s.startswith("| ") and s.endswith(" |")):
             continue
         c = [x.strip() for x in s.strip("|").split("|")]
-        if len(c) != 6 or not RE_ID.match(c[0]):
+        if len(c) != 7 or not RE_ID.match(c[0]):
             continue
-        gatilho = c[1]
-        # `†` marca o que decorre da Res. CFM 2.454/2026, com vigencia propria.
-        futuro = gatilho.startswith("†")
+        # A coluna `Norma` diz de que norma o gatilho decorre, quando isso muda o
+        # regime. Era um `†` colado no texto do gatilho, ate a Res. CFM 2.454/2026
+        # entrar em vigor em 26/08/2026: com a vigencia, a leitura obvia seria
+        # apagar os simbolos — e isso destruiria o dado. Saber que um achado
+        # decorre da 2.454 continua valendo depois da vigencia, porque e o que
+        # permite dizer a quem foi avaliado antes o que mudou. Dado em coluna,
+        # nao em enfeite de texto.
+        norma = c[6] if c[6] and c[6] != "—" else None
         out.append({
             "id": c[0], "secao": secao,
-            "gatilho": gatilho.lstrip("† ").strip(),
+            "gatilho": c[1],
             "severidade": c[2].strip("`"),
             "base": [b.strip() for b in c[3].split("·") if b.strip()],
             "checar": c[4], "mitigacao": c[5],
-            "futuro": futuro,
+            "norma": norma,
+            # `so_norma`: o gatilho nao tem base alem da norma nova. Sao os que
+            # mudam de natureza na vigencia — de advertencia preventiva a
+            # infracao autonoma —, nao apenas de rotulo.
+            "so_norma": bool(norma) and all(
+                b.startswith(norma) for b in
+                [x.strip() for x in c[3].split("·") if x.strip()]),
         })
+    # Catalogo vazio e erro, nunca silencio. Um catalogo em formato antigo — seis
+    # colunas em vez de sete — faz o `continue` acima descartar as 77 linhas, e o
+    # renderer produzia um parecer SEM NENHUM ACHADO, exit 0, sem uma palavra. O
+    # parser precisa gritar quando nao reconhece o que leu.
+    if not out:
+        sys.exit(f"ERRO: nenhum gatilho reconhecido em {caminho}. Esperado sete "
+                 f"colunas: # | Gatilho | Severidade | Base | O que checar | "
+                 f"Mitigação | Norma. Catálogo em formato antigo?")
     return out
 
 
@@ -112,11 +131,12 @@ def main():
         return 0
 
     if a.tsv:
-        print("id\tsev\tgatilho\tbase\tchecar\tmitigacao")
+        print("id\tsev\tgatilho\tbase\tchecar\tmitigacao\tnorma")
         for g in sel:
             print("\t".join([
-                g["id"], g["severidade"][0].upper() + ("!" if g["futuro"] else ""),
-                g["gatilho"], "·".join(g["base"]), g["checar"], g["mitigacao"]]))
+                g["id"], g["severidade"][0].upper(),
+                g["gatilho"], "·".join(g["base"]), g["checar"], g["mitigacao"],
+                g["norma"] or ""]))
         return 0
 
     if a.json:
@@ -130,8 +150,11 @@ def main():
         print("  base:      %s" % " · ".join(g["base"]))
         print("  checar:    %s" % g["checar"])
         print("  mitigação: %s" % g["mitigacao"])
-        if g["futuro"]:
-            print("  † Res. CFM 2.454/2026 — vigência em 26/08/2026")
+        if g["norma"]:
+            v = VIGENCIA.get(g["norma"])
+            print("  norma: %s%s%s" % (g["norma"],
+                  " · em vigor desde %s" % v if v else "",
+                  " · sem base autônoma fora dela" if g["so_norma"] else ""))
         print()
     return 0
 

@@ -28,6 +28,13 @@ import re
 import sys
 
 # nome curto -> prefixo do arquivo. Os curtos sao os que o checklist ja usa.
+# Caminhos relativos ao MODULO, nunca ao diretorio de trabalho. A skill roda no
+# diretorio do usuario, nao no do plugin: default relativo faz o script abortar
+# na maquina de quem instala. Nao foi visto por meses porque o eval sempre rodou
+# com cwd na raiz do repo — mesma classe do bug de --allowedTools, em que o
+# harness afrouxava o ambiente e media um produto que ninguem recebe.
+RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 CURTOS = {
     "uso-clinico": "01", "custodia": "02", "fornecedor": "03",
     "seguranca": "04", "responsabilidade": "05", "desenvolvimento": "06",
@@ -81,8 +88,8 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("ids", nargs="*")
     ap.add_argument("--diretrizes", default=os.environ.get(
-        "CORPUS_DIRETRIZES", "corpus/diretrizes"))
-    ap.add_argument("--campos", default="titulo,enunciado,base,verificar,escalar,leitura")
+        "CORPUS_DIRETRIZES", os.path.join(RAIZ, "corpus", "diretrizes")))
+    ap.add_argument("--campos", default=",".join(CAMPOS))
     ap.add_argument("--listar", action="store_true")
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args()

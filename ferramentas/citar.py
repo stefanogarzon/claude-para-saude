@@ -137,7 +137,10 @@ def main():
     ap = argparse.ArgumentParser(add_help=True, description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("ids", nargs="*", help="identificadores, ex. CFM-2454-2026:art4")
-    ap.add_argument("--fichas", default=os.environ.get("CORPUS_FICHAS", "corpus/fichas"),
+    ap.add_argument("--fichas", default=os.environ.get(
+        "CORPUS_FICHAS", os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            "corpus", "fichas")),
                     help="diretorio das fichas (padrao: corpus/fichas)")
     ap.add_argument("--campos", default=",".join(CAMPOS),
                     help="campos a devolver, separados por virgula")

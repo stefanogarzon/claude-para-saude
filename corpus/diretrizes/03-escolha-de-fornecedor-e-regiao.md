@@ -9,7 +9,7 @@ verificado: 2026-08-11
 
 Como escolher, qualificar e contratar um fornecedor de IA que vai tratar dado de paciente, e como fixar a região de processamento. As diretrizes valem por critério. Nome de produto e política de fornecedor mudam; o critério permanece.
 
-> Parte destas diretrizes decorre da Res. CFM 2.454/2026, em vigor a partir de 26/08/2026. Até essa data, o regime é o Código de Ética Médica, as Res. CFM 1.821/2007 e 2.314/2022 e a Lei 13.709/2018.
+> Parte destas diretrizes decorre da Res. CFM 2.454/2026, **em vigor desde 26/08/2026**. Elas são exigência corrente. Cada diretriz traz a resolução no campo `Base`, ao lado das demais normas que a sustentam.
 
 ## D1 — Trate envio a fornecedor fora do Brasil como transferência internacional
 

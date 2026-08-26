@@ -9,7 +9,7 @@ verificado: 2026-08-11
 
 O que observar ao escrever ou revisar código que trata dado de paciente ou integra um modelo de linguagem. Dirigido a quem escreve o código e a quem revisa o pull request.
 
-> Parte destas diretrizes decorre da Res. CFM 2.454/2026, em vigor a partir de 26/08/2026. Até essa data, o regime é o Código de Ética Médica, as Res. CFM 1.821/2007 e 2.314/2022 e a Lei 13.709/2018.
+> Parte destas diretrizes decorre da Res. CFM 2.454/2026, **em vigor desde 26/08/2026**. Elas são exigência corrente. Cada diretriz traz a resolução no campo `Base`, ao lado das demais normas que a sustentam.
 
 ## D1 — Desidentifique antes da chamada, ou documente a base do envio identificado
 
@@ -76,8 +76,6 @@ Nenhuma saída de modelo entra em prontuário, laudo, receita ou mensagem ao pac
 **Escalar se.** A revisão humana existe no fluxo, mas ocorre em lote e sem leitura efetiva do conteúdo.
 
 ## D5 — Permita desligar a IA por paciente
-
-> Vale a partir de 26/08/2026.
 
 A recusa do paciente precisa de efeito técnico. O sistema guarda a preferência por paciente e o fluxo alternativo funciona sem a ferramenta. Recusa de IA e base legal são exigências distintas e cumulativas: a recusa desliga a ferramenta, não revoga a base legal do atendimento e não autoriza eliminar o prontuário. A base legal se declara por finalidade, em campo próprio.
 
@@ -175,8 +173,6 @@ Desenvolvimento, homologação, demonstração e conjunto de avaliação usam da
 **Escalar se.** O projeto é de pesquisa ou de saúde pública e depende de enviar coorte a serviço externo.
 
 ## D11 — Entregue o que a instituição precisa para classificar o risco
-
-> Vale a partir de 26/08/2026.
 
 A classificação de risco é dever da instituição médica, e ela só a faz com informação que o time de desenvolvimento produz. Médico pessoa física fica fora do caput. Monte esse conjunto como artefato do projeto, versionado junto com o código, e atualize a cada mudança de modelo, de finalidade ou de escopo de dados. O nível de risco resultante é informado ao usuário.
 

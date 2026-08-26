@@ -107,16 +107,35 @@ def render(d, cat, corpus, verif, pver, hoje, vigente):
     for a in achados:
         g = a["g"]
         sev = ABREV.get(g["severidade"].split()[0], g["severidade"])
-        marca = " †" if g["futuro"] and not vigente else ""
+        marca = " †" if g["norma"] and not vigente else ""
         onde = " · `%s`" % a["ev"] if a["ev"] else ""
         L.append("| %s | %s%s | `%s` · %s%s | %s | %s |"
                  % (a["num"], g["gatilho"], onde, sev,
                     rotulo(SITUACAO, a["sit"]), marca,
                     " · ".join("`%s`" % b for b in g["base"]), g["mitigacao"]))
     L.append("")
-    if any(a["g"]["futuro"] for a in achados) and not vigente:
+
+    # A virada de vigencia nao pode ser entregue como AUSENCIA. Ate aqui, o unico
+    # efeito de a norma passar a valer era o simbolo † sumir da tabela — e simbolo
+    # que desaparece se le como "resolvido", nao como "a norma entrou em vigor".
+    # Quem leu o parecer na vespera precisa entender o que mudou.
+    da_norma = [a for a in achados if a["g"]["norma"]]
+    if da_norma and not vigente:
         L.append("† decorre da Res. CFM 2.454/2026, com efeitos a partir de "
                  "26/08/2026 — até lá é exigência futura.\n")
+    elif da_norma:
+        so = [a for a in da_norma if a["g"]["so_norma"]]
+        L.append("**A Res. CFM 2.454/2026 está em vigor desde 26/08/2026.** %d "
+                 "dos achados acima decorrem dela e são exigência corrente, sem "
+                 "período de adaptação." % len(da_norma))
+        if so:
+            L.append("")
+            L.append("Destes, %s %s de base fora da 2.454: até 25/08/2026 eram "
+                     "advertência preventiva; hoje são exigência autônoma. São os "
+                     "que mais mudaram de natureza nesta data."
+                     % (", ".join("**%s**" % a["num"] for a in so),
+                        "não dispõe" if len(so) == 1 else "não dispõem"))
+        L.append("")
 
     L.append("#### O que checar, por achado\n")
     for a in achados:

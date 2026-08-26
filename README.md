@@ -12,12 +12,14 @@ perguntar ao fornecedor e o que registrar.
 Você descreve o projeto — em prosa, ou apontando um repositório, contrato ou
 documentação — e a skill devolve dois arquivos:
 
-- `parecer-conformidade.md`, com os achados separados por severidade e cada um
-  rastreado ao dispositivo que o sustenta;
-- `checklist-conformidade.md`, uma linha por diretriz aplicável.
+- `parecer-conformidade.md` — uma tabela: o que o projeto faz, o risco, a
+  legislação que o sustenta e a mitigação. Ordenada por severidade;
+- `anexo-normativo.md` — o texto integral de cada dispositivo citado, com URL e
+  data de verificação.
 
-Cada trecho de norma entre aspas sai da transcrição literal guardada no corpus,
-com URL e data de verificação. A skill não escreve norma de memória.
+A skill não escreve norma nem mitigação: ela classifica o projeto dentro de um
+catálogo de 77 padrões de risco, e o texto sai do corpus pelo identificador. Não
+há como parafrasear dispositivo.
 
 ## Instalação
 
@@ -26,9 +28,8 @@ com URL e data de verificação. A skill não escreve norma de memória.
 /plugin install claude-para-saude
 ```
 
-Requer **Python 3 no PATH** — é o que faz o lookup dos dispositivos. Sem Python a
-skill opera em modo degradado e todo dispositivo sai sem texto literal, o que
-esvazia o principal: a citação verificável.
+Requer **Python 3 no PATH** — o catálogo, a validação e a renderização passam
+pelas ferramentas. Sem Python a skill não produz documento.
 
 ## Uso
 
@@ -47,14 +48,14 @@ Modelo Opus, caso de porte médio (descrição em prosa de um fluxo em produçã
 
 | | |
 |---|---|
-| tempo por avaliação | 6 a 13 minutos |
-| custo em API | US$ 2,30 a 4,70 |
+| tempo por avaliação | 3 a 6 minutos |
+| custo em API | US$ 1,00 a 2,20 |
 
 Não é uma resposta de trinta segundos. É a leitura de um corpus de 202
 dispositivos contra o seu caso, com cada dispositivo citado carregado da fonte.
 
-Casos menores saem mais baratos: um projeto sem dado de paciente fica em US$ 2,30
-e 6 minutos, porque a triagem afasta a maior parte do catálogo.
+Casos menores saem mais baratos: um projeto sem dado de paciente fica em torno de
+US$ 1,00 e 3 minutos, porque a triagem afasta a maior parte do catálogo.
 
 ## Cobertura, e os limites dela
 

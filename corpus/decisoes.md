@@ -14,17 +14,32 @@ Estas decisões são nossas. Não são norma. Cada uma diz em que se apoia e ond
 
 ## R1 — Vigência da Resolução CFM 2.454/2026
 
-A resolução entra em vigor em **26 de agosto de 2026**. Até 25/08/2026 ela não produz efeitos.
+**A resolução está em vigor desde 26 de agosto de 2026** (art. 23, 180 dias da
+publicação). É exigência corrente, e não há período de adaptação: os deveres dos
+arts. 4º a 7º valem desde o primeiro dia.
 
-Regra: toda diretriz que dependa dela traz a marcação abaixo, no início do bloco.
+Ressalva de contagem, mantida porque não foi dirimida: contada a partir da
+retificação de 05/03/2026, a vigência cairia em 01/09/2026. Adotamos 26/08/2026,
+que é a leitura conservadora. O CFM não se manifestou sobre a contagem até
+11/08/2026, data da verificação do corpus.
 
-> Vale a partir de 26/08/2026.
+**Como a dependência da 2.454 é registrada.** A informação de que um item decorre
+da 2.454 continua valendo depois da vigência — ela diz de onde vem a exigência, e
+é o que permite explicar a quem já foi avaliado antes o que mudou. Ela é registrada
+em **campo**, não em marcação de texto:
 
-O arquivo que tiver mais de três diretrizes dependentes traz também esta nota no cabeçalho:
+- no catálogo de gatilhos, na coluna `Norma`, com o id da resolução;
+- na diretriz, no campo `Base`, como qualquer outro dispositivo.
 
-> Parte destas diretrizes decorre da Res. CFM 2.454/2026, em vigor a partir de 26/08/2026. Até essa data, o regime é o Código de Ética Médica, as Res. CFM 1.821/2007 e 2.314/2022 e a Lei 13.709/2018.
+Não se usa mais a marcação `Vale a partir de`, nem nota de transição em cabeçalho
+de arquivo. Foram instrumentos do período pré-vigência, e o período acabou. Quem
+encontrar uma remanescente no corpus deve tratá-la como erro do corpus, pela
+regra 5, e não reproduzi-la.
 
-Diretriz que se sustenta em outra base além da 2.454 não recebe a marcação. Ela vale hoje.
+**O que a skill faz com isso.** Item que decorre da 2.454 sai como exigência
+corrente. O parecer avisa, uma vez, que a resolução entrou em vigor em 26/08/2026,
+e nomeia os achados que dependem exclusivamente dela — são os que deixaram de ser
+advertência preventiva e passaram a ser infração autônoma.
 
 **Base.** CFM-2454-2026:art23
 

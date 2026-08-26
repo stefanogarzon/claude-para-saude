@@ -1,14 +1,14 @@
 ---
 tipo: versao do distribuivel
-construido: 2026-08-25
+construido: 2026-08-26
 corpus_verificado_em: 2026-08-11
-plugin_version: 0.1.14
-dist_hash: 614dc09588ef4f68
+plugin_version: 0.1.15
+dist_hash: b2b0bc1d7c623214
 ---
 
 # Versao do distribuivel
 
-27 arquivos de corpus · 7 de skill · LICENSE e README · 202 dispositivos citaveis · plugin v0.1.14.
+27 arquivos de corpus · 7 de skill · LICENSE e README · 202 dispositivos citaveis · plugin v0.1.15.
 
 **Norma conferida em fonte primaria em 2026-08-11**. Esta e a data que o parecer cita, e a unica que interessa a quem decide com ele. `construido:` acima e a data em que o artefato foi montado, e nao diz nada sobre a idade da norma.
 
@@ -17,25 +17,25 @@ Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` nem `skil
 | Arquivo | sha256 (16) |
 |---|---|
 | `LICENSE` | `17efe88a418d875c` |
-| `README.md` | `56d208938ed11452` |
-| `decisoes.md` | `43e324da85a22491` |
-| `diretrizes/00-decisoes.md` | `43e324da85a22491` |
+| `README.md` | `3d06dda9076ba680` |
+| `decisoes.md` | `c27e5feeb0d6a906` |
+| `diretrizes/00-decisoes.md` | `c27e5feeb0d6a906` |
 | `diretrizes/00-formato.md` | `feb991e5a99e4597` |
 | `diretrizes/00-indice.md` | `3ca3d54abf9dd382` |
-| `diretrizes/01-uso-clinico-de-llm.md` | `b7ca8603559aa814` |
+| `diretrizes/01-uso-clinico-de-llm.md` | `d50aae28e50982af` |
 | `diretrizes/02-custodia-de-dados-de-saude.md` | `ce4603d2bd142348` |
-| `diretrizes/03-escolha-de-fornecedor-e-regiao.md` | `7f1e5fd581652024` |
+| `diretrizes/03-escolha-de-fornecedor-e-regiao.md` | `4bc93c656ac994af` |
 | `diretrizes/04-seguranca-tecnica.md` | `9e7d1a9fcc36031d` |
-| `diretrizes/05-responsabilidade-e-prova.md` | `77bfb5ed63a1fd22` |
-| `diretrizes/06-desenvolvimento-de-software.md` | `ef78f6cfa36a6d7e` |
-| `diretrizes/07-gatilhos-de-auditoria.md` | `7465122b6a043985` |
+| `diretrizes/05-responsabilidade-e-prova.md` | `ded351c65465d0b5` |
+| `diretrizes/06-desenvolvimento-de-software.md` | `8cce024238c46423` |
+| `diretrizes/07-gatilhos-de-auditoria.md` | `bd17ce704d834833` |
 | `diretrizes/08-desidentificacao.md` | `0932700a19c4368b` |
-| `ferramentas/citar.py` | `c75edfa75a30041d` |
-| `ferramentas/diretriz.py` | `3b8feb7426cffe42` |
+| `ferramentas/citar.py` | `7832e4472c2c0a82` |
+| `ferramentas/diretriz.py` | `87340eaebfbe89f9` |
 | `ferramentas/esquema_achados.py` | `c6c5dc983eb89987` |
-| `ferramentas/gatilhos.py` | `0d8c667ac871ec81` |
-| `ferramentas/render_parecer.py` | `e8baa523f88dc141` |
-| `ferramentas/validar_parecer.py` | `5928613d444060a4` |
+| `ferramentas/gatilhos.py` | `911859f50b13c2ad` |
+| `ferramentas/render_parecer.py` | `2d8feb00b22a9005` |
+| `ferramentas/validar_parecer.py` | `d8f0124dd0a453a6` |
 | `fichas/00-esquema.md` | `02592c59cefa8ad9` |
 | `fichas/00-indice.md` | `c1f6261c9363383e` |
 | `fichas/01-cfm-2454-2026.md` | `1dec48cbe6b1a388` |
@@ -50,4 +50,4 @@ Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` nem `skil
 | `fichas/10-civil-consumo-mci.md` | `beacd14305a21978` |
 | `fichas/11-seguranca-tecnica.md` | `b72194fc7e2b4a8d` |
 | `fichas/12-provedores-llm.md` | `1e5802dba19350c4` |
-| `skills/avaliar-conformidade/SKILL.md` | `54e048cd6609738f` |
+| `skills/avaliar-conformidade/SKILL.md` | `91c6fabb202b0947` |

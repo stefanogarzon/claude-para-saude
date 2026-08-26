@@ -3,16 +3,16 @@ name: avaliar-conformidade
 description: >
   Avalia projetos, produtos e serviços que usam IA ou LLM com dados de saúde no
   Brasil, contra corpus normativo verificado em fonte primária (CFM, LGPD/ANPD,
-  Código Penal, Código Civil, CDC, Marco Civil, padrões técnicos). Produz parecer
-  estruturado e checklist de conformidade, cada achado rastreado ao dispositivo.
-  Aceita descrição do projeto em prosa, repositório de código, contrato ou
-  documentação — ou combinação. Escrita para médico e responsável técnico: o
-  output diz o que exigir da TI, o que perguntar ao fornecedor e o que registrar.
+  Código Penal, Código Civil, CDC, Marco Civil, padrões técnicos). Produz um
+  parecer em tabela — o que o projeto faz, o risco, a legislação, a mitigação —
+  com cada achado rastreado ao dispositivo, mais o anexo com o texto das normas
+  citadas. Aceita descrição do projeto em prosa, repositório de código, contrato
+  ou documentação — ou combinação. Escrita para médico e responsável técnico.
   Use quando alguém apresentar sistema, app, protótipo, proposta ou fluxo com IA
   em saúde e quiser saber se está adequado — "isso está conforme?", "posso usar
   ChatGPT com dado de paciente?", "avalia esse projeto", "a clínica pode adotar
   isso?", "checagem de conformidade", "auditoria de IA", "a resolução do CFM
-  atinge o meu sistema?", "estamos prontos para 26 de agosto?".
+  atinge o meu sistema?", "estou em dia com a 2.454?".
 license: código MIT · corpus e skill CC BY-SA 4.0 — ver LICENSE do plugin
 compatibility: >
   Requer Python 3 no PATH. O catálogo, a validação e a renderização passam pelas
@@ -177,6 +177,11 @@ python3 ${CLAUDE_PLUGIN_ROOT}/ferramentas/gatilhos.py --tsv --secao <seção>...
 diretriz: os ids de `Base` são compartilhados, então filtrar por arquivo elegível
 não filtra nada.
 
+A coluna `norma` do TSV diz de que norma o gatilho decorre quando isso muda o
+regime. A Res. CFM 2.454/2026 está em vigor desde 26/08/2026 — é exigência
+corrente, não futura. Não acrescente ressalva de vigência aos achados; o parecer
+já traz o aviso, e o renderer o escreve sozinho.
+
 | Seção | Deixe de fora quando |
 |---|---|
 | Envio de dado a LLM | — sempre entra |
@@ -270,6 +275,10 @@ python3 ${CLAUDE_PLUGIN_ROOT}/ferramentas/render_parecer.py <saida>/achados.json
 
 O validador confere vocabulário, existência dos gatilhos, o par origem/situação,
 evidência e repetição. Corrija até sair 0, depois renderize.
+
+O renderer grava **dois** arquivos: `parecer-conformidade.md`, com a tabela de
+achados, e `anexo-normativo.md`, com o texto integral dos dispositivos citados.
+Diga ao usuário que são dois.
 
 ---
 
