@@ -1,18 +1,30 @@
 ---
 name: avaliar-conformidade
 description: >
-  Avalia projetos, produtos e serviços que usam IA ou LLM com dados de saúde no
-  Brasil, contra corpus normativo verificado em fonte primária (CFM, LGPD/ANPD,
-  Código Penal, Código Civil, CDC, Marco Civil, padrões técnicos). Produz um
-  parecer em tabela — o que o projeto faz, o risco, a legislação, a mitigação —
-  com cada achado rastreado ao dispositivo, mais o anexo com o texto das normas
-  citadas. Aceita descrição do projeto em prosa, repositório de código, contrato
-  ou documentação — ou combinação. Escrita para médico e responsável técnico.
-  Use quando alguém apresentar sistema, app, protótipo, proposta ou fluxo com IA
-  em saúde e quiser saber se está adequado — "isso está conforme?", "posso usar
-  ChatGPT com dado de paciente?", "avalia esse projeto", "a clínica pode adotar
-  isso?", "checagem de conformidade", "auditoria de IA", "a resolução do CFM
-  atinge o meu sistema?", "estou em dia com a 2.454?".
+  Avalia se um projeto, serviço ou rotina que usa IA está adequado à lei e à
+  norma médica brasileira — Res. CFM 2.454/2026, Código de Ética Médica,
+  LGPD/ANPD, Código Penal —, contra corpus verificado em fonte primária. Produz
+  parecer em tabela: o que faz, o risco, a legislação, a mitigação.
+
+  Use sempre que perguntarem se podem usar IA no trabalho clínico, ou se o que
+  já fazem está regular. Vale para IA, LLM, ChatGPT, GPT, Claude ou Gemini em
+  contato com paciente, prontuário, laudo, evolução, receita, atestado, sumário
+  de alta, exame, transcrição ou gravação de consulta, triagem, telemedicina e
+  prontuário eletrônico com IA embarcada. Vale também quando o objeto é a
+  clínica, o consultório, o hospital ou a healthtech como um todo.
+
+  Exemplos: "posso usar o ChatGPT nos laudos dos meus pacientes?" · "analise se
+  meu projeto está conforme com a LGPD" · "como a lei brasileira vê o meu
+  projeto" · "gravo a consulta e mando pra IA transcrever, é permitido?" · "está
+  tudo certo do ponto de vista de conformidade?" · "isso fere o Código de Ética
+  Médica?" · "dá problema no meu CRM?" · "o que muda com a resolução do CFM em
+  vigor?" · "quero avaliar um projeto da nossa clínica antes de liberar" · "meu
+  prontuário eletrônico veio com IA embutida" · "a TI subiu um serviço que gera
+  resumo de alta, o que cobro deles?" · "preciso avisar o paciente que uso IA?"
+
+  Não use para conformidade sem dado de saúde, regulação estrangeira isolada
+  (FDA, HIPAA, EU AI Act) nem registro na ANVISA.
+
 license: código MIT · corpus e skill CC BY-SA 4.0 — ver LICENSE do plugin
 compatibility: >
   Requer Python 3 no PATH. O catálogo, a validação e a renderização passam pelas
