@@ -277,8 +277,12 @@ O validador confere vocabulário, existência dos gatilhos, o par origem/situaç
 evidência e repetição. Corrija até sair 0, depois renderize.
 
 O renderer grava **dois** arquivos: `parecer-conformidade.md`, com a tabela de
-achados, e `anexo-normativo.md`, com o texto integral dos dispositivos citados.
-Diga ao usuário que são dois.
+achados, e `anexo-normativo.md`, com o texto dos dispositivos citados. Diga ao
+usuário que são dois.
+
+Não passe `--hoje`: o padrão é a data do sistema. É essa data que decide se a
+Res. CFM 2.454/2026 sai como exigência corrente, e ela não deve depender de você
+lembrar do dia certo.
 
 ---
 

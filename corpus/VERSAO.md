@@ -2,13 +2,13 @@
 tipo: versao do distribuivel
 construido: 2026-08-26
 corpus_verificado_em: 2026-08-11
-plugin_version: 0.1.17
-dist_hash: 06c8f19f173ab789
+plugin_version: 0.1.19
+dist_hash: 96de39c7b19989f6
 ---
 
 # Versao do distribuivel
 
-27 arquivos de corpus · 7 de skill · LICENSE e README · 215 dispositivos citaveis · plugin v0.1.17.
+27 arquivos de corpus · 7 de skill · LICENSE e README · 215 dispositivos citaveis · plugin v0.1.19.
 
 **Norma conferida em fonte primaria em 2026-08-11**. Esta e a data que o parecer cita, e a unica que interessa a quem decide com ele. `construido:` acima e a data em que o artefato foi montado, e nao diz nada sobre a idade da norma.
 
@@ -16,8 +16,8 @@ Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` nem `skil
 
 | Arquivo | sha256 (16) |
 |---|---|
-| `LICENSE` | `17efe88a418d875c` |
-| `README.md` | `3d06dda9076ba680` |
+| `LICENSE` | `77e0da50f71f3406` |
+| `README.md` | `04c656d5d36e80cc` |
 | `decisoes.md` | `c27e5feeb0d6a906` |
 | `diretrizes/00-decisoes.md` | `c27e5feeb0d6a906` |
 | `diretrizes/00-formato.md` | `feb991e5a99e4597` |
@@ -34,7 +34,7 @@ Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` nem `skil
 | `ferramentas/diretriz.py` | `87340eaebfbe89f9` |
 | `ferramentas/esquema_achados.py` | `c6c5dc983eb89987` |
 | `ferramentas/gatilhos.py` | `911859f50b13c2ad` |
-| `ferramentas/render_parecer.py` | `2d8feb00b22a9005` |
+| `ferramentas/render_parecer.py` | `6b7ae8c0112f2c56` |
 | `ferramentas/validar_parecer.py` | `d8f0124dd0a453a6` |
 | `fichas/00-esquema.md` | `02592c59cefa8ad9` |
 | `fichas/00-indice.md` | `c1f6261c9363383e` |
@@ -50,4 +50,4 @@ Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` nem `skil
 | `fichas/10-civil-consumo-mci.md` | `beacd14305a21978` |
 | `fichas/11-seguranca-tecnica.md` | `045df786ea10be11` |
 | `fichas/12-provedores-llm.md` | `2fcd10da847d88db` |
-| `skills/avaliar-conformidade/SKILL.md` | `91c6fabb202b0947` |
+| `skills/avaliar-conformidade/SKILL.md` | `75337f7034411fae` |

@@ -21,6 +21,7 @@ import json
 import os
 import re
 import sys
+from datetime import date
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import citar
@@ -63,17 +64,29 @@ def render(d, cat, corpus, verif, pver, hoje, vigente):
         achados.append({"g": g, "ori": ori, "sit": sit, "ev": ev})
     achados.sort(key=lambda x: (ORDEM.get(x["g"]["severidade"].split()[0], 9),
                                 x["g"]["id"]))
-    # numeracao N.N: secao 2 para bloqueante, 3 para o resto
+    # Numeracao `B1`/`R1`, nao `2.1`/`3.1`. A anterior punha achados `risco` em
+    # `3.x` enquanto todos vivem sob `## 2. Achados` e `## 3.` e outra secao — um
+    # medico que pedisse ao responsavel tecnico "veja o 3.5" mandava a pessoa
+    # para "Escalar". Documento que se pretende citavel nao pode ter duas coisas
+    # com o mesmo numero.
     cont = collections.Counter()
     for a in achados:
-        sec = 2 if a["g"]["severidade"].startswith("bloqueante") else 3
-        cont[sec] += 1
-        a["num"] = "%d.%d" % (sec, cont[sec])
+        pre = "B" if a["g"]["severidade"].startswith("bloqueante") else "R"
+        cont[pre] += 1
+        a["num"] = "%s%d" % (pre, cont[pre])
 
     L = ["# Parecer de conformidade — %s\n" % d["p"]]
-    L.append("corpus conferido em fonte primária em **%s** · distribuível v%s · "
-             "alcance `%s` · %s"
+    L.append("corpus conferido em **%s** · distribuível v%s · alcance `%s` · %s"
              % (verif or "?", pver or "?", rotulo(ALCANCE, d["alc"]), hoje))
+    # O split de confianca sai do proprio corpus. Afirmar "verificado em fonte
+    # primaria" sem ressalva era falso para 20 dos 215 dispositivos — os que
+    # foram conferidos contra informativo, e nao contra inteiro teor.
+    n_conf = sum(1 for e in corpus.values()
+                 if e.get("confianca") == "primária-conferida")
+    if corpus:
+        L.append("\n%d dos %d dispositivos do corpus foram conferidos em fonte "
+                 "primária; %d o foram parcialmente, e cada ficha registra qual "
+                 "é o caso." % (n_conf, len(corpus), len(corpus) - n_conf))
     if d["alc"] == "D":
         L.append("\nMaterial só declarado: o teto de todo item é "
                  "`conforme-declarado`. Conformidade declarada não é conformidade.")
@@ -92,9 +105,16 @@ def render(d, cat, corpus, verif, pver, hoje, vigente):
     L.append("")
     afast = d.get("afast") or []
     if afast:
-        L.append("Premissas afastadas pela triagem: %s. Os gatilhos desses "
-                 "arquivos não dispararam.\n"
-                 % ", ".join("`%s` (%s)" % (a, ARQUIVOS.get(a, a)) for a in afast))
+        # Sem afirmar o que os gatilhos fizeram: a frase anterior dizia "os
+        # gatilhos desses arquivos nao dispararam" e a tabela abaixo trazia dois
+        # achados de desidentificacao num caso que declarava desidentificacao
+        # afastada. Arquivo de diretriz e secao de catalogo sao eixos diferentes,
+        # e os ids de `Base` sao compartilhados entre eles — distincao interna
+        # que o leitor nao tem por que conhecer, e que fazia o documento se
+        # desmentir. E o nome do tema no lugar do numero do arquivo, que e
+        # referencia que o usuario nao possui.
+        L.append("A triagem afastou estes temas, por não se aplicarem ao caso: "
+                 "%s.\n" % ", ".join(ARQUIVOS.get(a, a) for a in afast))
 
     L.append("## 2. Achados\n")
     n_b = sum(1 for a in achados if a["g"]["severidade"].startswith("bloqueante"))
@@ -158,13 +178,32 @@ def render(d, cat, corpus, verif, pver, hoje, vigente):
     else:
         L.append("Nada fora do escopo.\n")
 
-    # cobertura: derivada, nao escrita pelo modelo
+    # Cobertura: derivada, nao escrita pelo modelo — e AGORA honesta sobre o que
+    # nao foi visto. A versao anterior dizia "os N restantes foram percorridos e
+    # nao dispararam", contando sobre o catalogo INTEIRO. Mas a fase 2 carrega so
+    # as secoes que a triagem indicou: num caso que afastou seis dos sete
+    # arquivos, o parecer atestava 75 gatilhos percorridos. Era a unica frase do
+    # documento que convertia varredura parcial em atestado de cobertura, e saia
+    # em todo parecer, por codigo.
+    #
+    # Nao da para saber daqui QUAIS secoes a skill carregou — o achados.json nao
+    # registra isso. Entao o parecer para de afirmar o que nao sabe: diz quantos
+    # gatilhos dispararam, e que os demais ou nao se aplicam ou nao foram
+    # avaliados, sem escolher por conta propria qual dos dois.
     disparou = {a["g"]["id"] for a in achados}
     perg = sum(1 for a in achados if a["sit"] == "P")
+    secoes_com = {g["secao"] for g in cat if g["id"] in disparou}
     L.append("## 5. Cobertura\n")
-    L.append("Catálogo de %d gatilhos. **%d** dispararam, dos quais %d como "
-             "pergunta. Os %d restantes foram percorridos e não dispararam.\n"
-             % (len(cat), len(disparou), perg, len(cat) - len(disparou)))
+    L.append("O catálogo tem %d gatilhos, em %d seções temáticas. **%d** "
+             "dispararam neste caso, %d deles como pergunta, e vieram de %d "
+             "seções."
+             % (len(cat), len({g["secao"] for g in cat}), len(disparou), perg,
+                len(secoes_com)))
+    L.append("")
+    L.append("Os demais gatilhos não constam deste parecer por uma de duas "
+             "razões: a triagem afastou a seção a que pertencem, ou o padrão não "
+             "foi encontrado no material. **Este documento não afirma que o "
+             "catálogo inteiro foi percorrido.**\n")
 
     # anexo: literal de cada dispositivo, uma vez
     ids = []
@@ -188,8 +227,14 @@ def render(d, cat, corpus, verif, pver, hoje, vigente):
     # Anexo em arquivo proprio. No mesmo documento ele era 82% dos bytes — 50 KB
     # de literal contra 11 KB de parecer — e nao e o que o medico le para decidir.
     A = ["# Anexo normativo — %s\n" % d["p"]]
-    A.append("Texto integral dos %d dispositivos citados no parecer. Corpus "
-             "conferido em fonte primária em %s.\n" % (len(ids), verif or "?"))
+    A.append("Transcrição dos **%d dispositivos citados neste parecer**. Não é o "
+             "texto integral das normas, nem compilação de legislação: são apenas "
+             "os dispositivos que sustentam os achados acima. Corpus conferido em "
+             "%s.\n" % (len(ids), verif or "?"))
+    # O aviso vive aqui tambem. Este arquivo e o que se encaminha isolado ao
+    # juridico ou a diretoria clinica, e sem ressalva parece compendio normativo
+    # autoritativo — 60 KB de texto de lei sem uma linha dizendo o que nao e.
+    A.append(AVISO + "\n")
     faltando = []
     for i in ids:
         e = corpus.get(i)
@@ -210,7 +255,13 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("achados")
     ap.add_argument("--saida", required=True)
-    ap.add_argument("--hoje", required=True)
+    # `--hoje` decide se a Res. CFM 2.454/2026 sai como exigencia corrente ou
+    # futura — a afirmacao factual mais consequente do documento. Era comparacao
+    # de string sem parsing: `--hoje ontem` dava `'o' > '2'` e virava vigente por
+    # acidente; `--hoje 2025-12-31` fazia o parecer negar uma norma em vigor.
+    # Agora o default e a data do sistema, e formato invalido e erro duro.
+    ap.add_argument("--hoje", type=date.fromisoformat, default=date.today(),
+                    help="AAAA-MM-DD; omita para usar a data de hoje")
     ap.add_argument("--fichas", default=os.environ.get(
         "CORPUS_FICHAS", os.path.join(RAIZ, "corpus", "fichas")))
     ap.add_argument("--corpus", default=os.environ.get(
@@ -223,9 +274,10 @@ def main():
         a.corpus, "diretrizes", "07-gatilhos-de-auditoria.md"))
     corpus = citar.carregar(a.fichas)
     verif, pver = versao(a.corpus)
-    vigente = a.hoje >= "2026-08-26"
+    vigente = a.hoje >= date(2026, 8, 26)
 
-    texto, anexo, faltando = render(d, cat, corpus, verif, pver, a.hoje, vigente)
+    texto, anexo, faltando = render(d, cat, corpus, verif, pver,
+                                    a.hoje.isoformat(), vigente)
     os.makedirs(a.saida, exist_ok=True)
     io.open(os.path.join(a.saida, "parecer-conformidade.md"), "w",
             encoding="utf-8").write(texto + "\n")

@@ -17,9 +17,9 @@ documentação — e a skill devolve dois arquivos:
 - `anexo-normativo.md` — o texto integral de cada dispositivo citado, com URL e
   data de verificação.
 
-A skill não escreve norma nem mitigação: ela classifica o projeto dentro de um
-catálogo de 77 padrões de risco, e o texto sai do corpus pelo identificador. Não
-há como parafrasear dispositivo.
+A skill não redige norma nem mitigação: ela classifica o projeto dentro de um
+catálogo de 86 padrões de risco. O texto normativo não passa pelo modelo — sai
+do corpus pelo identificador do dispositivo.
 
 ## Instalação
 
@@ -48,14 +48,15 @@ Modelo Opus, caso de porte médio (descrição em prosa de um fluxo em produçã
 
 | | |
 |---|---|
-| tempo por avaliação | 3 a 6 minutos |
-| custo em API | US$ 1,00 a 2,20 |
+| tempo por avaliação | 3 a 8 minutos |
+| custo em API | US$ 1,00 a 2,50 |
 
-Não é uma resposta de trinta segundos. É a leitura de um corpus de 202
+Não é uma resposta de trinta segundos. É a leitura de um corpus de 215
 dispositivos contra o seu caso, com cada dispositivo citado carregado da fonte.
 
-Casos menores saem mais baratos: um projeto sem dado de paciente fica em torno de
-US$ 1,00 e 3 minutos, porque a triagem afasta a maior parte do catálogo.
+Um projeto sem dado de paciente fica em torno de US$ 1,00 e 3 minutos, porque a
+triagem afasta a maior parte do catálogo. Auditoria de repositório é o extremo
+oposto: até US$ 2,50 e 8 minutos, porque lê o código.
 
 ## Cobertura, e os limites dela
 
