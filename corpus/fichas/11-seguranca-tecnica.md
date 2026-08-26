@@ -648,7 +648,7 @@ Verificadas em 2026-08-11.
 - dataset de avaliação com dado real versionado no repositório
 - uso de provedor cuja configuração padrão utiliza os inputs para treinamento
 
-**Relacionados.** CFM-2454-2026:art6 · CFM-2454-2026:anexoI.XVI · PROV:comparativo
+**Relacionados.** CFM-2454-2026:art6 · CFM-2454-2026:anexoI.XV-XVI · PROV:comparativo
 
 ---
 

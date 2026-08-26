@@ -276,7 +276,7 @@ A ressalva de armazenamento "transiently or cached in any country" é relevante 
 - contrato ou documento interno que nomeia "Vertex AI" como serviço coberto por BAA para IA generativa
 - ausência de definição de região do projeto em serviço com dado de paciente
 
-**Relacionados.** PROV:comparativo · LGPD:art33 · CFM-2454-2026:anexoI.XVI
+**Relacionados.** PROV:comparativo · LGPD:art33 · CFM-2454-2026:anexoI.XV-XVI
 
 ---
 

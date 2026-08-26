@@ -2,13 +2,13 @@
 tipo: versao do distribuivel
 construido: 2026-08-26
 corpus_verificado_em: 2026-08-11
-plugin_version: 0.1.15
-dist_hash: b2b0bc1d7c623214
+plugin_version: 0.1.17
+dist_hash: 06c8f19f173ab789
 ---
 
 # Versao do distribuivel
 
-27 arquivos de corpus · 7 de skill · LICENSE e README · 202 dispositivos citaveis · plugin v0.1.15.
+27 arquivos de corpus · 7 de skill · LICENSE e README · 215 dispositivos citaveis · plugin v0.1.17.
 
 **Norma conferida em fonte primaria em 2026-08-11**. Esta e a data que o parecer cita, e a unica que interessa a quem decide com ele. `construido:` acima e a data em que o artefato foi montado, e nao diz nada sobre a idade da norma.
 
@@ -28,7 +28,7 @@ Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` nem `skil
 | `diretrizes/04-seguranca-tecnica.md` | `9e7d1a9fcc36031d` |
 | `diretrizes/05-responsabilidade-e-prova.md` | `ded351c65465d0b5` |
 | `diretrizes/06-desenvolvimento-de-software.md` | `8cce024238c46423` |
-| `diretrizes/07-gatilhos-de-auditoria.md` | `bd17ce704d834833` |
+| `diretrizes/07-gatilhos-de-auditoria.md` | `32796998f07cacaf` |
 | `diretrizes/08-desidentificacao.md` | `0932700a19c4368b` |
 | `ferramentas/citar.py` | `7832e4472c2c0a82` |
 | `ferramentas/diretriz.py` | `87340eaebfbe89f9` |
@@ -38,7 +38,7 @@ Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` nem `skil
 | `ferramentas/validar_parecer.py` | `d8f0124dd0a453a6` |
 | `fichas/00-esquema.md` | `02592c59cefa8ad9` |
 | `fichas/00-indice.md` | `c1f6261c9363383e` |
-| `fichas/01-cfm-2454-2026.md` | `1dec48cbe6b1a388` |
+| `fichas/01-cfm-2454-2026.md` | `e0b08f54a8505e40` |
 | `fichas/02-cem-2217-2018.md` | `7cb5de0f13c460bf` |
 | `fichas/03-cfm-1821-2007.md` | `431d30c0102779f2` |
 | `fichas/04-cfm-2314-2022.md` | `2abeb9b6b4587a34` |
@@ -48,6 +48,6 @@ Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` nem `skil
 | `fichas/08-lgpd-sancoes.md` | `585eb8f594b9569d` |
 | `fichas/09-penal.md` | `e33d58c1a4e8b6d1` |
 | `fichas/10-civil-consumo-mci.md` | `beacd14305a21978` |
-| `fichas/11-seguranca-tecnica.md` | `b72194fc7e2b4a8d` |
-| `fichas/12-provedores-llm.md` | `1e5802dba19350c4` |
+| `fichas/11-seguranca-tecnica.md` | `045df786ea10be11` |
+| `fichas/12-provedores-llm.md` | `2fcd10da847d88db` |
 | `skills/avaliar-conformidade/SKILL.md` | `91c6fabb202b0947` |
