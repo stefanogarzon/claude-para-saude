@@ -2,13 +2,13 @@
 tipo: versao do distribuivel
 construido: 2026-08-27
 corpus_verificado_em: 2026-08-11
-plugin_version: 0.1.24
-dist_hash: 7d1c30404c833b6f
+plugin_version: 0.1.25
+dist_hash: 138c54c13a09c335
 ---
 
 # Versao do distribuivel
 
-27 arquivos de corpus · 7 de skill · LICENSE e README · 215 dispositivos citaveis · plugin v0.1.24.
+27 arquivos de corpus · 8 de skill · LICENSE e README · 215 dispositivos citaveis · plugin v0.1.25.
 
 **Norma conferida em fonte primaria em 2026-08-11**. Esta e a data que o parecer cita, e a unica que interessa a quem decide com ele. `construido:` acima e a data em que o artefato foi montado, e nao diz nada sobre a idade da norma.
 
@@ -16,6 +16,7 @@ Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` nem `skil
 
 | Arquivo | sha256 (16) |
 |---|---|
+| `CHANGELOG.md` | `188565fa5d7e8b15` |
 | `LICENSE` | `77e0da50f71f3406` |
 | `README.md` | `04c656d5d36e80cc` |
 | `decisoes.md` | `c27e5feeb0d6a906` |
