@@ -1,29 +1,30 @@
 ---
 name: avaliar-conformidade
 description: >
-  Avalia se um projeto, serviço ou rotina que usa IA está adequado à lei e à
-  norma médica brasileira — Res. CFM 2.454/2026, Código de Ética Médica,
-  LGPD/ANPD, Código Penal —, contra corpus verificado em fonte primária. Produz
-  parecer em tabela: o que faz, o risco, a legislação, a mitigação.
+  Avalia conformidade com a lei e a norma médica brasileira — Res. CFM
+  2.454/2026, Código de Ética Médica, LGPD/ANPD, Código Penal —, contra corpus
+  verificado em fonte primária. Cobre projeto, serviço, consultório, clínica ou
+  rotina de trabalho. Produz parecer em tabela: o que faz, o risco, a
+  legislação, a mitigação.
 
-  Use sempre que perguntarem se podem usar IA no trabalho clínico, ou se o que
-  já fazem está regular. Vale para IA, LLM, ChatGPT, GPT, Claude ou Gemini em
-  contato com paciente, prontuário, laudo, evolução, receita, atestado, sumário
-  de alta, exame, transcrição ou gravação de consulta, triagem, telemedicina e
-  prontuário eletrônico com IA embarcada. Vale também quando o objeto é a
-  clínica, o consultório, o hospital ou a healthtech como um todo.
+  Use quando perguntarem se podem usar IA no trabalho clínico, ou se o que já
+  fazem está regular. Vale para IA, LLM, ChatGPT, GPT, Claude ou Gemini junto de
+  paciente, prontuário, laudo, evolução, receita, atestado, sumário de alta,
+  exame, transcrição de consulta, triagem ou telemedicina — e também quando o
+  objeto é o consultório, a clínica, o hospital ou a healthtech.
 
   Exemplos: "posso usar o ChatGPT nos laudos dos meus pacientes?" · "analise se
-  meu projeto está conforme com a LGPD" · "como a lei brasileira vê o meu
-  projeto" · "gravo a consulta e mando pra IA transcrever, é permitido?" · "está
-  tudo certo do ponto de vista de conformidade?" · "isso fere o Código de Ética
-  Médica?" · "dá problema no meu CRM?" · "o que muda com a resolução do CFM em
-  vigor?" · "quero avaliar um projeto da nossa clínica antes de liberar" · "meu
-  prontuário eletrônico veio com IA embutida" · "a TI subiu um serviço que gera
-  resumo de alta, o que cobro deles?" · "preciso avisar o paciente que uso IA?"
+  meu projeto está conforme com a LGPD" · "meu consultório está adequado à LGPD
+  e ao CFM?" · "está tudo certo do ponto de vista de conformidade?" · "isso fere
+  o Código de Ética Médica?" · "o que muda com a resolução do CFM em
+  vigor?" · "quero avaliar um projeto da nossa clínica antes de liberar"
 
-  Não use para conformidade sem dado de saúde, regulação estrangeira isolada
-  (FDA, HIPAA, EU AI Act) nem registro na ANVISA.
+  Pergunta de conformidade cujo domínio não está dito — "meu projeto está
+  conforme com a LGPD?" — entra: a triagem confirma o escopo antes de julgar.
+  Nunca entra: registro de produto na ANVISA e enquadramento como dispositivo
+  médico ou software como dispositivo médico, que são regulação sanitária e não
+  estão no corpus; regulação estrangeira isolada (FDA, HIPAA, EU AI Act);
+  domínio declarado fora da saúde (e-commerce, fintech, RH).
 
 license: código MIT · corpus e skill CC BY-SA 4.0 — ver LICENSE do plugin
 compatibility: >

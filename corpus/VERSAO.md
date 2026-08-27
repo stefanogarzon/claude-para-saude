@@ -1,14 +1,14 @@
 ---
 tipo: versao do distribuivel
-construido: 2026-08-26
+construido: 2026-08-27
 corpus_verificado_em: 2026-08-11
-plugin_version: 0.1.21
-dist_hash: f2d77b6997ec0272
+plugin_version: 0.1.24
+dist_hash: 7d1c30404c833b6f
 ---
 
 # Versao do distribuivel
 
-27 arquivos de corpus · 7 de skill · LICENSE e README · 215 dispositivos citaveis · plugin v0.1.21.
+27 arquivos de corpus · 7 de skill · LICENSE e README · 215 dispositivos citaveis · plugin v0.1.24.
 
 **Norma conferida em fonte primaria em 2026-08-11**. Esta e a data que o parecer cita, e a unica que interessa a quem decide com ele. `construido:` acima e a data em que o artefato foi montado, e nao diz nada sobre a idade da norma.
 
@@ -50,4 +50,4 @@ Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` nem `skil
 | `fichas/10-civil-consumo-mci.md` | `beacd14305a21978` |
 | `fichas/11-seguranca-tecnica.md` | `045df786ea10be11` |
 | `fichas/12-provedores-llm.md` | `2fcd10da847d88db` |
-| `skills/avaliar-conformidade/SKILL.md` | `081bdede4fc72146` |
+| `skills/avaliar-conformidade/SKILL.md` | `8efe7de0a615df3a` |
