@@ -2,8 +2,9 @@
 
 Plugin do Claude Code que avalia se um projeto de IA ou LLM com dado de saúde
 está adequado às normas brasileiras. Escrito para **médico e responsável
-técnico**, não para desenvolvedor: o parecer diz o que exigir da TI, o que
-perguntar ao fornecedor e o que registrar.
+técnico**, não para desenvolvedor: o parecer abre com a resposta — sim, não ou
+depende — e agrupa o que fazer por quem executa (você, o fornecedor, o contrato,
+ou o que um serviço desse porte não resolve sozinho).
 
 > Orientação profissional, **não parecer jurídico**. Ver `LICENSE`.
 

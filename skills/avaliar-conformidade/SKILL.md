@@ -42,8 +42,11 @@ allowed-tools: Read, Grep, Glob, Write, Edit, Bash(python3:*)
 # Avaliação de conformidade — IA e LLM com dados de saúde
 
 Escrita para **médico e responsável técnico**, não para desenvolvedor. O leitor
-responde pelo serviço e não lê código. Traduza todo achado técnico em três
-formas de ação: **exigir da TI**, **perguntar ao fornecedor**, **registrar**.
+responde pelo serviço e não lê código. Todo achado sai com um destinatário, e
+o parecer agrupa por ele: **voce** (o leitor resolve sozinho), **fornecedor**
+(exigir de quem fornece o sistema), **contrato** (precisa de contrato ou de
+advogado), **fora** (não se resolve num serviço desse porte). Quem não sabe de
+quem é a tarefa não executa nenhuma.
 
 Esta skill **não** é parecer jurídico, **não** decide caso controverso e **não**
 substitui o responsável técnico. Ela levanta a pergunta certa, com a base certa,
@@ -245,14 +248,17 @@ o busca pelo id. Carregá-lo gasta contexto sem destino.
 Grave **um arquivo**, no caminho confirmado na triagem. Só variáveis:
 
 ```json
-{"p":"escriba de consulta em cardiologia",
+{"p":"transcrição de consulta por ChatGPT em consultório de cardiologia",
+ "veredito":"Não, do jeito que está hoje. O áudio da consulta vai para uma conta pessoal de consumidor, sem contrato que proteja o consultório nem o paciente.",
+ "agora":"pare de enviar áudio com nome de paciente para a conta pessoal.",
+ "passado":"apague o histórico da conversa e os áudios no celular; o que já foi ao prontuário fica.",
  "alc":"D",
  "tri":{"mat":"P","dado":"ID","papel":"GTC","dec":false,"mod":"PRES","est":"PROD",
         "forn":"OpenAI ChatGPT, plano pessoal; região não declarada"},
  "afast":["06","08"],
- "a":[["G02","D","C",null],
-      ["G31","O","C","app.py:57-61"],
-      ["G68","A","P",null]],
+ "a":[["G02","D","C",null,"voce"],
+      ["G31","O","C","app.py:57-61","fornecedor"],
+      ["G68","A","P",null,"contrato"]],
  "esc":[["escriba de consulta, não classificado em nível de risco","JUR"]],
  "fora":["FDA","EU AI Act"]}
 ```
@@ -270,8 +276,26 @@ Vocabulário, e nada fora dele:
 | `afast` | `01` `02` `03` `04` `05` `06` `08` |
 | destino em `esc` | `RT` responsável técnico · `JUR` jurídico |
 
-`a` é uma lista de tuplas `[gatilho, origem, situação, evidência]`. Evidência é
-`arquivo:linha` quando a origem é `O`, e `null` nas outras.
+`a` é uma lista de tuplas `[gatilho, origem, situação, evidência, ação]`.
+Evidência é `arquivo:linha` quando a origem é `O`, e `null` nas outras.
+
+**A quinta posição diz a quem cabe executar**, e é o que agrupa o parecer:
+
+| valor | significa |
+|---|---|
+| `voce` | o leitor resolve sozinho — configuração, texto no prontuário, orientar a equipe |
+| `fornecedor` | depende de quem fornece o sistema; vira pergunta a enviar por escrito |
+| `contrato` | precisa de instrumento assinado ou de advogado |
+| `fora` | um serviço desse porte não resolve sozinho |
+
+Escolha pelo que o material disse sobre o serviço, não pelo caso ideal. Consultório
+de uma sala não estende certificação de prontuário eletrônico: isso é `fora`, e
+dizer `voce` faz a pessoa não fazer nada.
+
+**`veredito` responde a pergunta que foi feita**, numa frase, começando por Não,
+Sim ou Depende. `agora` é o que parar ou fazer hoje. `passado` só quando o
+material disser que já há uso com paciente real — o que fazer com o histórico, as
+gravações e o que já entrou no prontuário.
 
 Escreva compacto, sem indentação. Não há campo de texto livre além de `p`,
 `forn`, o item de `esc` e o assunto em `fora`.

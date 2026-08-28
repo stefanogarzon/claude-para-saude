@@ -49,7 +49,7 @@ def carregar(caminho):
         if not (s.startswith("| ") and s.endswith(" |")):
             continue
         c = [x.strip() for x in s.strip("|").split("|")]
-        if len(c) != 7 or not RE_ID.match(c[0]):
+        if len(c) != 8 or not RE_ID.match(c[0]):
             continue
         # A coluna `Norma` diz de que norma o gatilho decorre, quando isso muda o
         # regime. Era um `†` colado no texto do gatilho, ate a Res. CFM 2.454/2026
@@ -66,6 +66,14 @@ def carregar(caminho):
             "base": [b.strip() for b in c[3].split("·") if b.strip()],
             "checar": c[4], "mitigacao": c[5],
             "norma": norma,
+            # `efeito`: o mesmo gatilho dito para quem responde pelo servico e
+            # nao le codigo. A coluna `Gatilho` existe para casar com o Grep —
+            # `logging.info(request.json)` e `AES.MODE_ECB` sao o padrao literal
+            # que a varredura procura, e nao podem ser suavizados sem quebrar a
+            # busca. Mas era esse texto que chegava ao medico no parecer. Dois
+            # publicos, duas colunas, um arquivo. Quando nao ha traducao, o
+            # renderer cai no proprio Gatilho: 59 das 86 linhas ja sao legiveis.
+            "efeito": c[7] if c[7] and c[7] != "—" else c[1],
             # `so_norma`: o gatilho nao tem base alem da norma nova. Sao os que
             # mudam de natureza na vigencia — de advertencia preventiva a
             # infracao autonoma —, nao apenas de rotulo.

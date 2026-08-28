@@ -44,6 +44,17 @@ ESTAGIO = {"IDEIA": "ideia", "PROTO": "protótipo", "PILOTO": "piloto",
            "PROD": "produção"}
 DESTINO = {"RT": "responsável técnico", "JUR": "jurídico"}
 
+# A quem cabe executar. Define em que bloco do parecer o achado aparece — e
+# existe porque 29 linhas de peso igual nao dizem por onde comecar. `fora` e
+# honestidade: ha exigencia que um consultorio de uma sala nao cumpre sozinho, e
+# fingir o contrario faz a pessoa nao fazer nada.
+ACAO = {
+    "voce": "o próprio leitor resolve",
+    "fornecedor": "exigir de quem fornece o sistema",
+    "contrato": "precisa de contrato ou de advogado",
+    "fora": "não se resolve num serviço desse porte",
+}
+
 TRIAGEM = [("mat", MATERIAL), ("dado", DADO), ("papel", PAPEL),
            ("mod", MODALIDADE), ("est", ESTAGIO)]
 
@@ -61,7 +72,7 @@ ARQUIVOS = {
     "08": "desidentificação",
 }
 
-RAIZ_OBRIGATORIA = ["p", "alc", "tri", "a"]
+RAIZ_OBRIGATORIA = ["p", "alc", "tri", "a", "veredito"]
 
 # --- exemplo -----------------------------------------------------------------
 
@@ -72,10 +83,18 @@ EXEMPLO = {
             "mod": "PRES", "est": "PROD",
             "forn": "OpenAI ChatGPT, plano pessoal de consumidor; região não declarada"},
     "afast": ["06", "08"],
-    "a": [["G02", "D", "C", None],
-          ["G18", "D", "C", None],
-          ["G51", "A", "P", None],
-          ["G68", "A", "P", None]],
+    "veredito": "Não, do jeito que está hoje. O áudio da consulta vai para uma "
+                "conta pessoal de consumidor, que não tem contrato que proteja "
+                "o consultório nem o paciente.",
+    "agora": "pare de enviar áudio com nome de paciente para a conta pessoal e "
+             "desligue o uso dos seus dados para treino nas configurações.",
+    "passado": "apague o histórico da conversa na conta pessoal e os áudios "
+               "guardados no celular; o que já foi para o prontuário fica, "
+               "porque prontuário não se apaga.",
+    "a": [["G02", "D", "C", None, "voce"],
+          ["G18", "D", "C", None, "fornecedor"],
+          ["G51", "A", "P", None, "voce"],
+          ["G68", "A", "P", None, "contrato"]],
     "esc": [["escriba e transcrição de consulta, não classificados em nível de risco", "JUR"]],
     "fora": ["FDA", "EU AI Act"],
 }

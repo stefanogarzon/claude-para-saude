@@ -1,14 +1,14 @@
 ---
 tipo: versao do distribuivel
-construido: 2026-08-27
+construido: 2026-08-28
 corpus_verificado_em: 2026-08-11
-plugin_version: 0.1.25
-dist_hash: 138c54c13a09c335
+plugin_version: 0.1.28
+dist_hash: e030b5b808c993b1
 ---
 
 # Versao do distribuivel
 
-27 arquivos de corpus · 8 de skill · LICENSE e README · 215 dispositivos citaveis · plugin v0.1.25.
+27 arquivos de corpus · 8 de skill · LICENSE e README · 215 dispositivos citaveis · plugin v0.1.28.
 
 **Norma conferida em fonte primaria em 2026-08-11**. Esta e a data que o parecer cita, e a unica que interessa a quem decide com ele. `construido:` acima e a data em que o artefato foi montado, e nao diz nada sobre a idade da norma.
 
@@ -18,7 +18,7 @@ Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` nem `skil
 |---|---|
 | `CHANGELOG.md` | `188565fa5d7e8b15` |
 | `LICENSE` | `77e0da50f71f3406` |
-| `README.md` | `04c656d5d36e80cc` |
+| `README.md` | `29c27ec65d90fefc` |
 | `decisoes.md` | `c27e5feeb0d6a906` |
 | `diretrizes/00-decisoes.md` | `c27e5feeb0d6a906` |
 | `diretrizes/00-formato.md` | `feb991e5a99e4597` |
@@ -29,14 +29,14 @@ Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` nem `skil
 | `diretrizes/04-seguranca-tecnica.md` | `9e7d1a9fcc36031d` |
 | `diretrizes/05-responsabilidade-e-prova.md` | `ded351c65465d0b5` |
 | `diretrizes/06-desenvolvimento-de-software.md` | `8cce024238c46423` |
-| `diretrizes/07-gatilhos-de-auditoria.md` | `32796998f07cacaf` |
+| `diretrizes/07-gatilhos-de-auditoria.md` | `ef3554106fde93a3` |
 | `diretrizes/08-desidentificacao.md` | `0932700a19c4368b` |
 | `ferramentas/citar.py` | `7832e4472c2c0a82` |
 | `ferramentas/diretriz.py` | `87340eaebfbe89f9` |
-| `ferramentas/esquema_achados.py` | `c6c5dc983eb89987` |
-| `ferramentas/gatilhos.py` | `911859f50b13c2ad` |
-| `ferramentas/render_parecer.py` | `6b7ae8c0112f2c56` |
-| `ferramentas/validar_parecer.py` | `d8f0124dd0a453a6` |
+| `ferramentas/esquema_achados.py` | `5cfa2927ee87d46a` |
+| `ferramentas/gatilhos.py` | `9e18b391308e3658` |
+| `ferramentas/render_parecer.py` | `5530d654ef162845` |
+| `ferramentas/validar_parecer.py` | `d4aa83a14e915790` |
 | `fichas/00-esquema.md` | `02592c59cefa8ad9` |
 | `fichas/00-indice.md` | `c1f6261c9363383e` |
 | `fichas/01-cfm-2454-2026.md` | `e0b08f54a8505e40` |
@@ -51,4 +51,4 @@ Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` nem `skil
 | `fichas/10-civil-consumo-mci.md` | `beacd14305a21978` |
 | `fichas/11-seguranca-tecnica.md` | `045df786ea10be11` |
 | `fichas/12-provedores-llm.md` | `2fcd10da847d88db` |
-| `skills/avaliar-conformidade/SKILL.md` | `8efe7de0a615df3a` |
+| `skills/avaliar-conformidade/SKILL.md` | `a5b0e37707cad608` |

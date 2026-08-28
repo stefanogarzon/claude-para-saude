@@ -118,6 +118,50 @@ def blocos_de_achado(texto):
                   (num.group(2) if num else titulo), corpo[m.start():f]
 
 
+# Termos que nao podem chegar ao corpo do parecer. A SKILL diz, na primeira
+# linha: "Escrita para medico e responsavel tecnico, NAO para desenvolvedor. O
+# leitor responde pelo servico e nao le codigo."
+#
+# Esta lista existe porque a promessa foi quebrada sem que ninguem notasse: a
+# refatoracao de vocabulario fechado cortou o custo de US$ 3,82 para 1,64 e
+# levou junto os campos de acao — e os quatro criterios de aprovacao seguiram
+# passando, porque nenhum deles olhava para o leitor. Enquanto legibilidade nao
+# for criterio, a proxima otimizacao paga com o mesmo dinheiro.
+JARGAO = [
+    # infraestrutura e codigo
+    "payload", "endpoint", "webhook", "dataset", "allowlist", "grounding",
+    "opt-out", "logging", "console.log", "verify=False", "sslmode", "bucket",
+    # cifra e protocolo
+    "TLSv1", "AES.MODE", "PKCS1", "HMAC", "RC4", "3DES", "md5(", "sha256(",
+    # certificacao e siglas nao expandidas
+    "NGS1", "NGS2", "S-RES", "DICOM",
+    # contrato com provedor de LLM, em ingles no material de origem
+    "BAA", "ZDR", "Zero Data Retention", "abuse monitoring",
+    # vocabulario interno do metodo
+    "conforme-declarado", "conforme-verificado", "bloq.", "distribuível v",
+    "primária-conferida", "primária-parcial",
+]
+
+
+def conferir_legibilidade(caminho_md):
+    """Nenhum termo da lista negra no corpo do parecer.
+
+    So o corpo: o anexo normativo transcreve lei, e lei tem o vocabulario que
+    tem. O parecer e o documento de decisao, e e para quem nao le codigo.
+    """
+    if not os.path.isfile(caminho_md):
+        return []
+    texto = io.open(caminho_md, encoding="utf-8").read()
+    corpo = texto.split("## Como este parecer foi feito")[0]
+    achou = []
+    for termo in JARGAO:
+        n = corpo.count(termo)
+        if n:
+            achou.append(f"jargao no corpo do parecer: {termo!r} ({n}x) — a "
+                         f"SKILL promete texto para quem nao le codigo")
+    return achou
+
+
 def validar_json(caminho, sev, conf, catalogo=None):
     """Confere o achados.json de vocabulario fechado.
 
@@ -132,7 +176,7 @@ def validar_json(caminho, sev, conf, catalogo=None):
     import gatilhos as G
     from esquema_achados import (ORIGEM, SITUACAO, ALCANCE, MATERIAL, DADO,
                                  PAPEL, MODALIDADE, ESTAGIO, DESTINO, ARQUIVOS,
-                                 RAIZ_OBRIGATORIA)
+                                 ACAO, RAIZ_OBRIGATORIA)
     problemas, avisos = [], []
     d = json.load(io.open(caminho, encoding="utf-8"))
 
@@ -146,6 +190,18 @@ def validar_json(caminho, sev, conf, catalogo=None):
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
         "corpus", "diretrizes", "07-gatilhos-de-auditoria.md"))
     idx = {g["id"]: g for g in cat}
+
+    # O veredito responde a pergunta que foi feita. Existe porque o parecer
+    # passou a vida sem responder: um medico que perguntava "posso fazer isso?"
+    # recebia 29 achados e nenhuma frase dizendo pode ou nao pode. A palavra
+    # "Vedada" chegava a existir — no anexo, numa celula de tabela.
+    ver = (d.get("veredito") or "").strip()
+    if not ver:
+        problemas.append("falta `veredito` — o parecer tem de responder a "
+                         "pergunta antes de listar achado")
+    elif not ver[:9].lower().startswith(("não", "nao", "sim", "depende")):
+        problemas.append(f"veredito nao comeca por Nao, Sim ou Depende: "
+                         f"{ver[:40]!r}")
 
     if d["alc"] not in ALCANCE:
         problemas.append(f"alcance fora do vocabulario: {d['alc']!r}")
@@ -171,11 +227,16 @@ def validar_json(caminho, sev, conf, catalogo=None):
     perguntas = 0
     for i, t in enumerate(d["a"]):
         rot = f"achado[{i}]"
-        if not isinstance(t, list) or not (3 <= len(t) <= 4):
-            problemas.append(f"{rot}: tem de ser [gatilho, origem, situacao, evidencia]")
+        if not isinstance(t, list) or not (3 <= len(t) <= 5):
+            problemas.append(f"{rot}: tem de ser [gatilho, origem, situacao, "
+                             f"evidencia, acao]")
             continue
         gid, ori, sit = t[0], t[1], t[2]
         ev = t[3] if len(t) > 3 else None
+        acao = t[4] if len(t) > 4 else None
+        if acao is not None and acao not in ACAO:
+            problemas.append(f"{rot}: acao fora do vocabulario: {acao!r} "
+                             f"(vale {'/'.join(sorted(ACAO))})")
         if gid not in idx:
             problemas.append(f"{rot}: gatilho inexistente no catalogo — {gid}")
         else:
@@ -238,6 +299,10 @@ def main():
     # `.json` e o formato corrente; `.md` fica para os pareceres ja gravados.
     if args.parecer.endswith(".json"):
         _, problemas, avisos = validar_json(args.parecer, sev, conf)
+        # se o parecer renderizado estiver ao lado, confere legibilidade tambem
+        problemas += conferir_legibilidade(
+            os.path.join(os.path.dirname(os.path.abspath(args.parecer)),
+                         "parecer-conformidade.md"))
         for p in problemas:
             print(f"  - {p}")
         if avisos:

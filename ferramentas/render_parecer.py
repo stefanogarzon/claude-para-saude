@@ -25,6 +25,7 @@ from datetime import date
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import citar
+from validar_parecer import JARGAO
 import gatilhos
 from esquema_achados import (ORIGEM, SITUACAO, ALCANCE, ARQUIVOS, TRIAGEM,
                              ROTULO_TRIAGEM, DESTINO)
@@ -52,16 +53,59 @@ def rotulo(mapa, chave):
     return mapa.get(chave, chave)
 
 
+def legenda_base(bid, corpus):
+    """`CEM:art87` vira "Código de Ética Médica, art. 87 — prontuário legível".
+
+    A ementa ja existia em toda ficha, e o renderer ja a carregava — mas so a
+    imprimia no anexo. No parecer saia o id cru, que para um medico e nome de
+    arquivo, nao referencia de norma. A convencao medico-juridica e "art. 87 do
+    CEM"; `CEM:art87` e convencao de programador.
+    """
+    NOME = {
+        "CEM": "Código de Ética Médica", "CP": "Código Penal",
+        "CC": "Código Civil", "CDC": "Código de Defesa do Consumidor",
+        "MCI": "Marco Civil da Internet", "LGPD": "LGPD",
+        "SEC": "padrão técnico", "PROV": "política do fornecedor",
+        "STJ": "STJ",
+    }
+    norma, _, disp = bid.partition(":")
+    if norma.startswith("CFM-"):
+        p = norma.split("-")
+        rotulo_norma = "Res. CFM %s/%s" % (p[1][:1] + "." + p[1][1:], p[2]) \
+            if len(p) == 3 else norma
+    elif norma.startswith("ANPD-"):
+        p = norma.split("-")
+        rotulo_norma = "Res. ANPD %s/%s" % (p[1], p[2]) if len(p) == 3 else norma
+    else:
+        rotulo_norma = NOME.get(norma, norma)
+    import re as _re
+    disp = _re.sub(r"^art(\d+)", lambda m: "art. %sº" % m.group(1)
+                   if int(m.group(1)) <= 9 else "art. " + m.group(1), disp)
+    disp = disp.replace("anexo", "anexo ").replace("§", ", §")
+    e = corpus.get(bid) or {}
+    em = (e.get("ementa") or "").rstrip(".")
+    # A ementa foi escrita para o corpus, nao para o parecer: sete delas trazem
+    # `NGS2`, `S-RES`, `BAA`, `Zero Data Retention`. Reusa-la e bom negocio nas
+    # outras 208, e nestas seria trocar um jargao (o id) por outro. Quando ela
+    # traz termo da lista negra, o parecer fica so com a norma e o artigo — que
+    # ja e legivel, e e o que a convencao medico-juridica usa.
+    if em and not any(x in em for x in JARGAO):
+        return "%s, %s — %s" % (rotulo_norma, disp.strip(),
+                                em[:1].lower() + em[1:])
+    return "%s, %s" % (rotulo_norma, disp.strip())
+
+
 def render(d, cat, corpus, verif, pver, hoje, vigente):
     idx = {g["id"]: g for g in cat}
     achados = []
     for i, t in enumerate(d["a"]):
         gid, ori, sit = t[0], t[1], t[2]
         ev = t[3] if len(t) > 3 else None
+        acao = t[4] if len(t) > 4 else "voce"
         g = idx.get(gid)
         if not g:
             continue
-        achados.append({"g": g, "ori": ori, "sit": sit, "ev": ev})
+        achados.append({"g": g, "ori": ori, "sit": sit, "ev": ev, "acao": acao})
     achados.sort(key=lambda x: (ORDEM.get(x["g"]["severidade"].split()[0], 9),
                                 x["g"]["id"]))
     # Numeracao `B1`/`R1`, nao `2.1`/`3.1`. A anterior punha achados `risco` em
@@ -76,21 +120,36 @@ def render(d, cat, corpus, verif, pver, hoje, vigente):
         a["num"] = "%s%d" % (pre, cont[pre])
 
     L = ["# Parecer de conformidade — %s\n" % d["p"]]
-    L.append("corpus conferido em **%s** · distribuível v%s · alcance `%s` · %s"
-             % (verif or "?", pver or "?", rotulo(ALCANCE, d["alc"]), hoje))
-    # O split de confianca sai do proprio corpus. Afirmar "verificado em fonte
-    # primaria" sem ressalva era falso para 20 dos 215 dispositivos — os que
-    # foram conferidos contra informativo, e nao contra inteiro teor.
-    n_conf = sum(1 for e in corpus.values()
-                 if e.get("confianca") == "primária-conferida")
-    if corpus:
-        L.append("\n%d dos %d dispositivos do corpus foram conferidos em fonte "
-                 "primária; %d o foram parcialmente, e cada ficha registra qual "
-                 "é o caso." % (n_conf, len(corpus), len(corpus) - n_conf))
-    if d["alc"] == "D":
-        L.append("\nMaterial só declarado: o teto de todo item é "
-                 "`conforme-declarado`. Conformidade declarada não é conformidade.")
-    L.append("\n" + AVISO + "\n")
+
+    # A RESPOSTA vem antes de tudo. Ate aqui as quatro primeiras linhas eram
+    # metadado de metodo — versao do distribuivel, split de confianca do corpus,
+    # teto de alcance — e o aviso legal vinha antes de qualquer palavra sobre o
+    # caso. Quem perguntou "posso fazer isso?" precisava atravessar nove linhas
+    # sobre o proprio documento, e depois decodificar `bloq.` numa celula de
+    # tabela, para descobrir que a resposta era nao. O metodo desceu para o pe do
+    # documento; a resposta subiu.
+    firmes = [a for a in achados
+              if a["g"]["severidade"].startswith("bloqueante") and a["sit"] == "C"]
+    perg_b = [a for a in achados
+              if a["g"]["severidade"].startswith("bloqueante") and a["sit"] == "P"]
+    if d.get("veredito"):
+        L.append("**%s**\n" % d["veredito"])
+    elif firmes:
+        L.append("**Não, do jeito que está hoje.** %d ponto(s) do que foi descrito "
+                 "contraria norma em vigor.\n" % len(firmes))
+    elif perg_b:
+        L.append("**Depende de %d resposta(s) que só você tem.** Nada do que foi "
+                 "descrito contraria norma de forma clara, mas há pontos em que a "
+                 "resposta errada põe o serviço em desconformidade.\n" % len(perg_b))
+    else:
+        L.append("**Nada do que foi descrito contraria norma em vigor.**\n")
+
+    if d.get("agora"):
+        L.append("**Hoje:** %s\n" % d["agora"])
+    if d.get("passado"):
+        L.append("**Sobre o que já rodou:** %s\n" % d["passado"])
+
+    L.append(AVISO + "\n")
 
     L.append("## 1. O que o projeto é\n")
     L.append("| Campo | Valor |")
@@ -116,24 +175,61 @@ def render(d, cat, corpus, verif, pver, hoje, vigente):
         L.append("A triagem afastou estes temas, por não se aplicarem ao caso: "
                  "%s.\n" % ", ".join(ARQUIVOS.get(a, a) for a in afast))
 
-    L.append("## 2. Achados\n")
+    # Achados agrupados por QUEM EXECUTA, nao por severidade.
+    #
+    # Vinte e nove linhas de peso visual identico nao dizem por onde comecar. Na
+    # mesma coluna conviviam "desligar o treino na configuracao do provedor" —
+    # dois minutos, o proprio medico faz — e "estender a certificacao ao
+    # componente", que depende do fornecedor do prontuario e talvez nao exista.
+    # Sem separar as duas, o documento parece exigir vinte e nove coisas
+    # igualmente urgentes, e a pessoa nao faz nenhuma.
+    #
+    # O agrupamento sai do campo `acao` de cada achado, que o modelo preenche
+    # dizendo a quem cabe. Era isso que a SKILL sempre pediu — "traduza todo
+    # achado tecnico em tres formas de acao: exigir da TI, perguntar ao
+    # fornecedor, registrar" — e que a refatoracao de vocabulario fechado
+    # removeu do esquema sem que nenhum criterio de aprovacao notasse.
+    BLOCOS = [
+        ("voce", "O que você resolve sozinho",
+         "Configuração, texto no prontuário, orientação à equipe. Não depende de ninguém."),
+        ("fornecedor", "O que exigir de quem fornece o sistema",
+         "Mande estas perguntas por escrito, e guarde a resposta com data."),
+        ("contrato", "O que precisa de contrato ou de advogado", ""),
+        ("fora", "O que um serviço deste porte não resolve sozinho",
+         "Fica registrado porque a norma exige. Leve ao jurídico ou à direção clínica."),
+    ]
+    ORDEM_ACAO = {k: i for i, (k, _, _) in enumerate(BLOCOS)}
+
+    def dono(a):
+        return (a.get("acao") or "voce") if isinstance(a.get("acao"), str) else "voce"
+
+    L.append("## 2. O que fazer\n")
     n_b = sum(1 for a in achados if a["g"]["severidade"].startswith("bloqueante"))
-    L.append("%d achado(s): %d bloqueante(s), %d de risco. "
-             "`confirmado` é constatação; `pergunta` é o que a resposta errada "
-             "poria em desconformidade.\n"
+    L.append("%d ponto(s) a tratar: %d que a norma trata como impeditivo, %d de "
+             "risco. Onde está escrito **pergunta**, ninguém informou ainda — a "
+             "resposta é que define se há problema.\n"
              % (len(achados), n_b, len(achados) - n_b))
-    L.append("| # | O que faz | Risco | Base | Mitigação |")
-    L.append("|---|---|---|---|---|")
-    for a in achados:
-        g = a["g"]
-        sev = ABREV.get(g["severidade"].split()[0], g["severidade"])
-        marca = " †" if g["norma"] and not vigente else ""
-        onde = " · `%s`" % a["ev"] if a["ev"] else ""
-        L.append("| %s | %s%s | `%s` · %s%s | %s | %s |"
-                 % (a["num"], g["gatilho"], onde, sev,
-                    rotulo(SITUACAO, a["sit"]), marca,
-                    " · ".join("`%s`" % b for b in g["base"]), g["mitigacao"]))
-    L.append("")
+
+    for chave, titulo, ajuda in BLOCOS:
+        do_bloco = [a for a in achados if dono(a) == chave]
+        if not do_bloco:
+            continue
+        L.append("### %s\n" % titulo)
+        if ajuda:
+            L.append("%s\n" % ajuda)
+        L.append("| # | O que está acontecendo | Peso | Base legal | O que fazer |")
+        L.append("|---|---|---|---|---|")
+        for a in do_bloco:
+            g = a["g"]
+            sev = ("impeditivo" if g["severidade"].startswith("bloqueante")
+                   else g["severidade"].split()[0])
+            marca = " †" if g["norma"] and not vigente else ""
+            onde = " (visto em `%s`)" % a["ev"] if a["ev"] else ""
+            base = " · ".join("%s" % legenda_base(b, corpus) for b in g["base"])
+            L.append("| %s | %s%s | %s · %s%s | %s | %s |"
+                     % (a["num"], g["efeito"], onde, sev,
+                        rotulo(SITUACAO, a["sit"]), marca, base, g["mitigacao"]))
+        L.append("")
 
     # A virada de vigencia nao pode ser entregue como AUSENCIA. Ate aqui, o unico
     # efeito de a norma passar a valer era o simbolo † sumir da tabela — e simbolo
@@ -151,8 +247,7 @@ def render(d, cat, corpus, verif, pver, hoje, vigente):
         if so:
             L.append("")
             L.append("Destes, %s %s de base fora da 2.454: até 25/08/2026 eram "
-                     "advertência preventiva; hoje são exigência autônoma. São os "
-                     "que mais mudaram de natureza nesta data."
+                     "advertência preventiva; hoje são exigência autônoma."
                      % (", ".join("**%s**" % a["num"] for a in so),
                         "não dispõe" if len(so) == 1 else "não dispõem"))
         L.append("")
@@ -202,8 +297,8 @@ def render(d, cat, corpus, verif, pver, hoje, vigente):
     L.append("")
     L.append("Os demais gatilhos não constam deste parecer por uma de duas "
              "razões: a triagem afastou a seção a que pertencem, ou o padrão não "
-             "foi encontrado no material. **Este documento não afirma que o "
-             "catálogo inteiro foi percorrido.**\n")
+             "foi encontrado no material. A varredura cobriu as seções "
+             "carregadas, não o catálogo inteiro.\n")
 
     # anexo: literal de cada dispositivo, uma vez
     ids = []
@@ -213,6 +308,25 @@ def render(d, cat, corpus, verif, pver, hoje, vigente):
                 ids.append(b)
     L.append("O texto integral de cada dispositivo citado está em "
              "`anexo-normativo.md`, com URL e data de verificação.\n")
+
+    # Metodo no pe, nao no topo. Continua no documento, e continua verificavel —
+    # so deixou de ser a primeira coisa que o medico le.
+    L.append("## Como este parecer foi feito\n")
+    L.append("Corpus conferido em fonte primária em **%s**; versão %s do "
+             "distribuível; avaliação de %s." % (verif or "?", pver or "?", hoje))
+    n_conf = sum(1 for e in corpus.values()
+                 if e.get("confianca") == "primária-conferida")
+    if corpus:
+        L.append("")
+        L.append("Dos %d dispositivos do corpus, %d foram conferidos palavra por "
+                 "palavra contra a fonte oficial e %d o foram em parte. Cada ficha "
+                 "registra o caso." % (len(corpus), n_conf, len(corpus) - n_conf))
+    if d["alc"] == "D":
+        L.append("")
+        L.append("A avaliação usou apenas o que foi descrito por escrito: nada foi "
+                 "verificado no sistema, no contrato ou na configuração. Um item "
+                 "afirmado aqui é um item a comprovar, não um item comprovado.")
+    L.append("")
 
     obs = [a for a in achados if a["ev"]]
     L.append("## Anexo — evidência técnica\n")
