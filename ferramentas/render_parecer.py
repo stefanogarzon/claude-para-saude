@@ -53,21 +53,23 @@ def rotulo(mapa, chave):
     return mapa.get(chave, chave)
 
 
-def legenda_base(bid, corpus):
-    """`CEM:art87` vira "Código de Ética Médica, art. 87 — prontuário legível".
+NOME_NORMA = {
+    "CEM": "Código de Ética Médica", "CP": "Código Penal",
+    "CC": "Código Civil", "CDC": "Código de Defesa do Consumidor",
+    "MCI": "Marco Civil da Internet", "LGPD": "LGPD",
+    "SEC": "padrão técnico", "PROV": "política do fornecedor",
+    "STJ": "STJ",
+}
+
+
+def partes_base(bid, corpus):
+    """`CEM:art87` vira ("Código de Ética Médica", "art. 87", "prontuário...").
 
     A ementa ja existia em toda ficha, e o renderer ja a carregava — mas so a
     imprimia no anexo. No parecer saia o id cru, que para um medico e nome de
     arquivo, nao referencia de norma. A convencao medico-juridica e "art. 87 do
     CEM"; `CEM:art87` e convencao de programador.
     """
-    NOME = {
-        "CEM": "Código de Ética Médica", "CP": "Código Penal",
-        "CC": "Código Civil", "CDC": "Código de Defesa do Consumidor",
-        "MCI": "Marco Civil da Internet", "LGPD": "LGPD",
-        "SEC": "padrão técnico", "PROV": "política do fornecedor",
-        "STJ": "STJ",
-    }
     norma, _, disp = bid.partition(":")
     if norma.startswith("CFM-"):
         p = norma.split("-")
@@ -77,11 +79,10 @@ def legenda_base(bid, corpus):
         p = norma.split("-")
         rotulo_norma = "Res. ANPD %s/%s" % (p[1], p[2]) if len(p) == 3 else norma
     else:
-        rotulo_norma = NOME.get(norma, norma)
-    import re as _re
-    disp = _re.sub(r"^art(\d+)", lambda m: "art. %sº" % m.group(1)
-                   if int(m.group(1)) <= 9 else "art. " + m.group(1), disp)
-    disp = disp.replace("anexo", "anexo ").replace("§", ", §")
+        rotulo_norma = NOME_NORMA.get(norma, norma)
+    disp = re.sub(r"^art(\d+)", lambda m: "art. %sº" % m.group(1)
+                  if int(m.group(1)) <= 9 else "art. " + m.group(1), disp)
+    disp = disp.replace("anexo", "anexo ").replace("§", ", §").strip()
     e = corpus.get(bid) or {}
     em = (e.get("ementa") or "").rstrip(".")
     # A ementa foi escrita para o corpus, nao para o parecer: sete delas trazem
@@ -89,10 +90,73 @@ def legenda_base(bid, corpus):
     # outras 208, e nestas seria trocar um jargao (o id) por outro. Quando ela
     # traz termo da lista negra, o parecer fica so com a norma e o artigo — que
     # ja e legivel, e e o que a convencao medico-juridica usa.
-    if em and not any(x in em for x in JARGAO):
-        return "%s, %s — %s" % (rotulo_norma, disp.strip(),
-                                em[:1].lower() + em[1:])
-    return "%s, %s" % (rotulo_norma, disp.strip())
+    if em and any(x in em for x in JARGAO):
+        em = ""
+    return rotulo_norma, disp, (em[:1].lower() + em[1:] if em else "")
+
+
+def coluna_base(ids, corpus, vistos):
+    """Celula de base legal: a citacao, e o que o dispositivo exige.
+
+    A linha do parecer e uma cadeia: o projeto faz X, isso contraria o inciso Y,
+    que exige W, entao faca Z. Sem a ementa o terceiro elo some, e a linha passa
+    a mandar o leitor deduzir de `LGPD, art. 11, §4` por que aquilo e problema.
+
+    O custo da ementa e a repeticao, nao ela mesma: no caso 03 o art. 87 do CEM
+    saia por extenso em cinco linhas do mesmo documento. Entao sai uma vez por
+    documento, na primeira linha que cita o dispositivo; `vistos` carrega esse
+    estado entre as linhas e entre os blocos.
+
+    O nome da norma sai uma vez por celula. Quando nenhum dos dispositivos dela
+    precisa de ementa, os artigos se juntam: `Res. CFM 1.821/2007, arts. 3º e 4º`.
+    """
+    por_norma = collections.OrderedDict()
+    for b in ids:
+        norma, disp, em = partes_base(b, corpus)
+        if b in vistos:
+            em = ""
+        vistos.add(b)
+        por_norma.setdefault(norma, []).append(
+            ("%s — %s" % (disp, em)) if em else disp)
+
+    def junta(ds):
+        if len(ds) > 1 and all(x.startswith("art. ") and " — " not in x
+                               for x in ds):
+            return "arts. " + ", ".join(x[5:] for x in ds[:-1]) + " e " + ds[-1][5:]
+        return "; ".join(ds)
+    return " · ".join("%s, %s" % (n, junta(ds)) for n, ds in por_norma.items())
+
+
+VAZIAS = {"o", "a", "os", "as", "de", "da", "do", "das", "dos", "e", "em", "no",
+          "na", "nos", "nas", "que", "um", "uma", "por", "para", "com", "se",
+          "ou", "ao", "aos", "à", "às", "qual", "quais", "onde", "como", "há",
+          "sem", "cada", "seu", "sua"}
+
+
+def conteudo(s):
+    return {w for w in re.sub(r"[^\w áéíóúâêôãõç]", " ", s.lower()).split()
+            if len(w) > 2 and w not in VAZIAS}
+
+
+def celula_acao(g, situacao):
+    """Uma instrucao por linha, e a pergunta de checagem so quando ela acrescenta.
+
+    Em achado `pergunta` falta informacao, e a checagem e o primeiro passo. Mas
+    em 26 dos 86 gatilhos a checagem e a mitigacao dizem a mesma coisa em vozes
+    diferentes — `quais campos a tarefa exige` e `enviar so os campos que a
+    tarefa exige`. Imprimir as duas enche a celula sem dizer nada a mais.
+
+    O corte e por sobreposicao de palavras de conteudo: da checagem para a
+    mitigacao, 60% ou mais, sai so a mitigacao.
+    """
+    m = g["mitigacao"]
+    c = g.get("checar") or ""
+    if situacao != "P" or not c:
+        return m
+    pc = conteudo(c)
+    if pc and len(pc & conteudo(m)) / len(pc) >= 0.6:
+        return m
+    return "Checar: %s. Depois: %s" % (c, m)
 
 
 def render(d, cat, corpus, verif, pver, hoje, vigente):
@@ -151,7 +215,7 @@ def render(d, cat, corpus, verif, pver, hoje, vigente):
 
     L.append(AVISO + "\n")
 
-    L.append("## 1. O que o projeto é\n")
+    L.append("## 1. Objeto avaliado\n")
     L.append("| Campo | Valor |")
     L.append("|---|---|")
     for k, mapa in TRIAGEM:
@@ -189,35 +253,35 @@ def render(d, cat, corpus, verif, pver, hoje, vigente):
     # achado tecnico em tres formas de acao: exigir da TI, perguntar ao
     # fornecedor, registrar" — e que a refatoracao de vocabulario fechado
     # removeu do esquema sem que nenhum criterio de aprovacao notasse.
+    # Titulo nominal, e o destinatario dentro dele. A linha de ajuda sob cada
+    # bloco saiu: dizia o que o titulo ja diz.
     BLOCOS = [
-        ("voce", "O que você resolve sozinho",
-         "Configuração, texto no prontuário, orientação à equipe. Não depende de ninguém."),
-        ("fornecedor", "O que exigir de quem fornece o sistema",
-         "Mande estas perguntas por escrito, e guarde a resposta com data."),
-        ("contrato", "O que precisa de contrato ou de advogado", ""),
-        ("fora", "O que um serviço deste porte não resolve sozinho",
-         "Fica registrado porque a norma exige. Leve ao jurídico ou à direção clínica."),
+        ("voce", "Ações do próprio serviço"),
+        ("fornecedor", "Exigências ao fornecedor"),
+        ("contrato", "Instrumentos contratuais"),
+        ("fora", "Pontos fora do alcance do serviço"),
     ]
-    ORDEM_ACAO = {k: i for i, (k, _, _) in enumerate(BLOCOS)}
+    ORDEM_ACAO = {k: i for i, (k, _) in enumerate(BLOCOS)}
 
     def dono(a):
         return (a.get("acao") or "voce") if isinstance(a.get("acao"), str) else "voce"
 
-    L.append("## 2. O que fazer\n")
+    L.append("## 2. Achados e ações\n")
     n_b = sum(1 for a in achados if a["g"]["severidade"].startswith("bloqueante"))
-    L.append("%d ponto(s) a tratar: %d que a norma trata como impeditivo, %d de "
-             "risco. Onde está escrito **pergunta**, ninguém informou ainda — a "
-             "resposta é que define se há problema.\n"
-             % (len(achados), n_b, len(achados) - n_b))
+    n_p = sum(1 for a in achados if a["sit"] == "P")
+    L.append("%d achados: %d impeditivos, %d de risco. Em %d falta informação, "
+             "e a ação começa por checar.\n"
+             % (len(achados), n_b, len(achados) - n_b, n_p))
 
-    for chave, titulo, ajuda in BLOCOS:
+    # `vistos` atravessa os quatro blocos: a ementa de um dispositivo sai na
+    # primeira linha que o cita, e nas seguintes sai so a citacao.
+    vistos = set()
+    for chave, titulo in BLOCOS:
         do_bloco = [a for a in achados if dono(a) == chave]
         if not do_bloco:
             continue
         L.append("### %s\n" % titulo)
-        if ajuda:
-            L.append("%s\n" % ajuda)
-        L.append("| # | O que está acontecendo | Peso | Base legal | O que fazer |")
+        L.append("| # | Achado | Peso | Base legal | Ação |")
         L.append("|---|---|---|---|---|")
         for a in do_bloco:
             g = a["g"]
@@ -225,10 +289,14 @@ def render(d, cat, corpus, verif, pver, hoje, vigente):
                    else g["severidade"].split()[0])
             marca = " †" if g["norma"] and not vigente else ""
             onde = " (visto em `%s`)" % a["ev"] if a["ev"] else ""
-            base = " · ".join("%s" % legenda_base(b, corpus) for b in g["base"])
+            base = coluna_base(g["base"], corpus, vistos)
+            # A pergunta de checagem entra na linha do achado a que pertence.
+            # Ela saia numa lista propria ao fim da secao, repetindo os 31 ids
+            # para que o leitor cruzasse os dois.
             L.append("| %s | %s%s | %s · %s%s | %s | %s |"
                      % (a["num"], g["efeito"], onde, sev,
-                        rotulo(SITUACAO, a["sit"]), marca, base, g["mitigacao"]))
+                        rotulo(SITUACAO, a["sit"]), marca, base,
+                        celula_acao(g, a["sit"])))
         L.append("")
 
     # A virada de vigencia nao pode ser entregue como AUSENCIA. Ate aqui, o unico
@@ -241,24 +309,15 @@ def render(d, cat, corpus, verif, pver, hoje, vigente):
                  "26/08/2026 — até lá é exigência futura.\n")
     elif da_norma:
         so = [a for a in da_norma if a["g"]["so_norma"]]
-        L.append("**A Res. CFM 2.454/2026 está em vigor desde 26/08/2026.** %d "
-                 "dos achados acima decorrem dela e são exigência corrente, sem "
-                 "período de adaptação." % len(da_norma))
+        L.append("**Res. CFM 2.454/2026, em vigor desde 26/08/2026:** %d achados "
+                 "acima decorrem dela, como exigência corrente." % len(da_norma))
         if so:
-            L.append("")
-            L.append("Destes, %s %s de base fora da 2.454: até 25/08/2026 eram "
-                     "advertência preventiva; hoje são exigência autônoma."
-                     % (", ".join("**%s**" % a["num"] for a in so),
-                        "não dispõe" if len(so) == 1 else "não dispõem"))
+            L.append("Sem base fora dela: %s."
+                     % ", ".join("**%s**" % a["num"] for a in so))
         L.append("")
 
-    L.append("#### O que checar, por achado\n")
-    for a in achados:
-        L.append("- **%s** — %s" % (a["num"], a["g"]["checar"]))
-    L.append("")
-
     esc = d.get("esc") or []
-    L.append("## 3. Escalar\n")
+    L.append("## 3. Encaminhamentos\n")
     L += ["- %s → **%s**" % (e[0], rotulo(DESTINO, e[1])) for e in esc] or \
          ["Nada a escalar."]
     L.append("")
@@ -288,17 +347,13 @@ def render(d, cat, corpus, verif, pver, hoje, vigente):
     disparou = {a["g"]["id"] for a in achados}
     perg = sum(1 for a in achados if a["sit"] == "P")
     secoes_com = {g["secao"] for g in cat if g["id"] in disparou}
-    L.append("## 5. Cobertura\n")
-    L.append("O catálogo tem %d gatilhos, em %d seções temáticas. **%d** "
-             "dispararam neste caso, %d deles como pergunta, e vieram de %d "
-             "seções."
-             % (len(cat), len({g["secao"] for g in cat}), len(disparou), perg,
-                len(secoes_com)))
-    L.append("")
-    L.append("Os demais gatilhos não constam deste parecer por uma de duas "
-             "razões: a triagem afastou a seção a que pertencem, ou o padrão não "
-             "foi encontrado no material. A varredura cobriu as seções "
-             "carregadas, não o catálogo inteiro.\n")
+    L.append("## 5. Cobertura do catálogo\n")
+    L.append("Catálogo: %d gatilhos em %d seções. Dispararam %d, de %d seções, "
+             "%d como pergunta. Os demais ou tiveram a seção afastada na triagem, "
+             "ou não foram encontrados no material. A varredura cobriu as seções "
+             "carregadas, não o catálogo inteiro.\n"
+             % (len(cat), len({g["secao"] for g in cat}), len(disparou),
+                len(secoes_com), perg))
 
     # anexo: literal de cada dispositivo, uma vez
     ids = []
@@ -306,30 +361,27 @@ def render(d, cat, corpus, verif, pver, hoje, vigente):
         for b in a["g"]["base"]:
             if b not in ids:
                 ids.append(b)
-    L.append("O texto integral de cada dispositivo citado está em "
-             "`anexo-normativo.md`, com URL e data de verificação.\n")
+    L.append("Texto integral dos dispositivos citados: `anexo-normativo.md`, "
+             "com URL e data de verificação.\n")
 
     # Metodo no pe, nao no topo. Continua no documento, e continua verificavel —
     # so deixou de ser a primeira coisa que o medico le.
-    L.append("## Como este parecer foi feito\n")
-    L.append("Corpus conferido em fonte primária em **%s**; versão %s do "
-             "distribuível; avaliação de %s." % (verif or "?", pver or "?", hoje))
+    # Metodo no pe, em linhas de dado. Eram tres paragrafos de prosa.
     n_conf = sum(1 for e in corpus.values()
                  if e.get("confianca") == "primária-conferida")
-    if corpus:
-        L.append("")
-        L.append("Dos %d dispositivos do corpus, %d foram conferidos palavra por "
-                 "palavra contra a fonte oficial e %d o foram em parte. Cada ficha "
-                 "registra o caso." % (len(corpus), n_conf, len(corpus) - n_conf))
+    L.append("## Método\n")
+    L.append("- Corpus conferido em fonte primária em **%s**: %d dispositivos "
+             "palavra por palavra, %d em parte."
+             % (verif or "?", n_conf, len(corpus) - n_conf))
+    L.append("- Distribuível v%s. Avaliação de %s." % (pver or "?", hoje))
     if d["alc"] == "D":
-        L.append("")
-        L.append("A avaliação usou apenas o que foi descrito por escrito: nada foi "
-                 "verificado no sistema, no contrato ou na configuração. Um item "
-                 "afirmado aqui é um item a comprovar, não um item comprovado.")
+        L.append("- Base da avaliação: apenas o material escrito. Nada foi "
+                 "verificado no sistema, no contrato ou na configuração. Item "
+                 "afirmado aqui é item a comprovar.")
     L.append("")
 
     obs = [a for a in achados if a["ev"]]
-    L.append("## Anexo — evidência técnica\n")
+    L.append("## Evidência técnica\n")
     if obs:
         L.append("| Achado | Onde |")
         L.append("|---|---|")

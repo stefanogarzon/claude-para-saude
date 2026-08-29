@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Serve o catalogo de gatilhos por id ou por secao. Vocabulario fechado.
 
-O catalogo e a taxonomia de risco do corpus: 77 padroes observaveis, cada um
-com severidade, base normativa, pergunta de checagem e mitigacao canonica. A
-skill nao descreve risco em prosa — ela CLASSIFICA dentro destas 77 categorias e
-devolve o id. Tudo o mais o renderer busca aqui.
+O catalogo e a taxonomia de risco do corpus: 86 padroes observaveis, cada um com
+severidade, base normativa, pergunta de checagem, mitigacao canonica e a
+traducao do padrao para quem nao le codigo. A skill nao descreve risco em prosa —
+ela CLASSIFICA dentro destas 86 categorias e devolve o id. Tudo o mais o renderer
+busca aqui.
 
 Isso existe por medicao. Com a skill escrevendo prosa, `checar`, `base` e
 `severidade` sairam como copia literal deste arquivo em 100% dos achados dos
@@ -13,7 +14,7 @@ repositorio, e a redacao variava entre execucoes sem que o julgamento mudasse.
 
 Servir por SECAO funciona; por elegibilidade da fase 2 nao. Os ids de `Base` sao
 compartilhados entre arquivos de diretriz: filtrar por arquivo elegivel preserva
-76 das 77 linhas. As 10 secoes, ao contrario, sao tematicas e disjuntas.
+quase todas as linhas. As 10 secoes, ao contrario, sao tematicas e disjuntas.
 
 Uso:
     python3 gatilhos.py --listar
@@ -139,11 +140,27 @@ def main():
         return 0
 
     if a.tsv:
-        print("id\tsev\tgatilho\tbase\tchecar\tmitigacao\tnorma")
+        # `secao` e `efeito` entram aqui porque a fase 3 classifica contra ESTE
+        # TSV, e as duas faltavam.
+        #
+        # `efeito` e a traducao do gatilho para quem nao le codigo. Ela existia
+        # desde 0b73e52 e so chegava ao parecer — o classificador nunca a via. O
+        # G01 mede o estrago: `payload serializado do registro, sem selecao de
+        # campos` casa 11 de 11 vezes num caso com codigo e 2 de 14 num caso em
+        # prosa, onde o material e um arquivo de audio que nao tem campo a
+        # selecionar. O modelo estava sendo correto sobre o texto que recebeu.
+        # Sai so quando difere do gatilho — 27 das 86 —, senao seriam 59 linhas
+        # com a coluna duplicada, que treina a passar o olho.
+        #
+        # `secao` volta porque a SKILL manda rotear por tema e depois entregava
+        # um bloco plano com o tema apagado.
+        print("id\tsecao\tsev\tgatilho\tefeito\tbase\tchecar\tmitigacao\tnorma")
         for g in sel:
             print("\t".join([
-                g["id"], g["severidade"][0].upper(),
-                g["gatilho"], "·".join(g["base"]), g["checar"], g["mitigacao"],
+                g["id"], g["secao"] or "", g["severidade"][0].upper(),
+                g["gatilho"],
+                "" if g["efeito"] == g["gatilho"] else g["efeito"],
+                "·".join(g["base"]), g["checar"], g["mitigacao"],
                 g["norma"] or ""]))
         return 0
 

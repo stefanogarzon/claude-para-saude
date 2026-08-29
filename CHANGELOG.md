@@ -5,6 +5,72 @@ data de verificação própria, registrada em `corpus/VERSAO.md` no campo
 `corpus_verificado_em` — ela não muda a cada versão do plugin, e é ela que conta
 para decidir se a norma citada ainda vale.
 
+## v0.1.31 — 2026-08-29
+
+O parecer encolheu de 11% a 26%, e de 15% a 17% por achado nos três casos com
+mais de vinte. Cada linha da tabela passa a ser uma cadeia fechada: o que o
+projeto faz, o dispositivo que isso contraria, o que o dispositivo exige, e o que
+fazer a respeito.
+
+- **A lista "O que checar, por achado" saiu.** Eram até 31 marcadores ao fim da
+  seção, repetindo os identificadores da tabela para o leitor cruzar os dois.
+  Ocupavam 11% dos bytes do documento. A pergunta de checagem passou para a
+  linha do achado a que pertence.
+- **A ementa da norma sai uma vez por documento**, na primeira linha que cita o
+  dispositivo. O art. 87 do Código de Ética Médica saía por extenso em cinco
+  linhas do mesmo parecer. O nome da norma sai uma vez por célula:
+  `Res. CFM 1.821/2007, arts. 3º e 4º`.
+- **Em 26 dos 86 gatilhos, a checagem e a mitigação diziam a mesma coisa** em
+  vozes diferentes. "Quais campos a tarefa exige" e "enviar só os campos que a
+  tarefa exige" ocupavam duas orações para uma informação. Onde a sobreposição
+  passa de 60%, sai só a mitigação.
+- **Tetos de tamanho nos campos de prosa**, conferidos pelo validador: veredito
+  40 palavras, ação de hoje 30, histórico 30, cada encaminhamento 25. Ponto e
+  vírgula e travessão são recusados nesses campos. O veredito de um caso saiu com
+  86 palavras numa oração só.
+- **Títulos descritivos**: `Objeto avaliado`, `Achados e ações`, `Ações do
+  próprio serviço`, `Exigências ao fornecedor`, `Instrumentos contratuais`,
+  `Encaminhamentos`, `Cobertura do catálogo`, `Método`.
+- A regra de vocabulário passou a valer nos campos livres da triagem. O parecer
+  reprovava por `endpoint` no campo de fornecedor, e nada dizia ao modelo que
+  aquele campo sai no corpo do documento.
+
+As v0.1.29 e v0.1.30 são etapas desta mudança.
+
+## v0.1.28 — 2026-08-28
+
+O parecer passa a responder a pergunta que o leitor fez. Na v0.1.24, quem
+perguntasse "gravo a consulta e mando pro ChatGPT na minha conta pessoal, isso é
+permitido?" recebia 29 achados de peso igual, e nenhuma frase dizendo se pode ou
+não. A palavra "Vedada" saía no anexo, na linha 21, numa célula de quadro
+comparativo de fornecedores.
+
+- **A resposta abre o documento**: veredito, o que fazer hoje, e o que fazer com
+  o que já rodou — este último quando o material declara uso com paciente real.
+  Os metadados de método desceram para o pé do parecer; ocupavam as quatro
+  primeiras linhas.
+- **Os achados agrupam por quem executa**, em quatro blocos: o que você resolve
+  sozinho, o que exigir do fornecedor, o que precisa de contrato ou de advogado,
+  e o que um serviço desse porte não resolve. Antes conviviam na mesma coluna
+  "desligar o treino na configuração", de dois minutos, e "estender a
+  certificação do prontuário ao componente", que depende do fornecedor.
+- **A coluna da base legal diz do que trata o artigo.** `CEM:art87` passou a sair
+  como "Código de Ética Médica, art. 87 — prontuário legível, autoria e guarda".
+  Onde a ementa da ficha traz sigla não expandida, a base sai com norma e artigo
+  apenas.
+- **Jargão fora do texto.** O catálogo de 86 gatilhos ganhou uma coluna `Efeito`,
+  com 27 traduções para os que saíam em dialeto de código; nove mitigações e três
+  perguntas de checagem foram reescritas. Um critério de validação novo reprova o
+  parecer que traga qualquer termo de uma lista de 34 entradas. Rodado contra o
+  parecer da versão anterior, o critério pega 11.
+
+A causa da regressão fica registrada. A v0.1.14 removeu os campos de ação junto
+com a mudança para tabela, e os quatro critérios de aprovação continuaram verdes,
+porque nenhum deles olhava para o leitor.
+
+As v0.1.25 e v0.1.26 são etapas desta mudança e do backup do repositório
+editorial, publicadas sem anúncio.
+
 ## v0.1.24 — 2026-08-27
 
 - A skill passa a ser encontrada por quem escreve em português natural. O disparo

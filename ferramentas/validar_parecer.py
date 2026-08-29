@@ -152,13 +152,51 @@ def conferir_legibilidade(caminho_md):
     if not os.path.isfile(caminho_md):
         return []
     texto = io.open(caminho_md, encoding="utf-8").read()
-    corpo = texto.split("## Como este parecer foi feito")[0]
+    # O corpo termina onde comeca o metodo. O titulo mudou de "Como este parecer
+    # foi feito" para "Metodo"; os dois entram, para que parecer antigo continue
+    # sendo conferido pelo mesmo criterio.
+    corpo = re.split(r"(?m)^## (?:Método|Como este parecer foi feito)\s*$",
+                     texto)[0]
     achou = []
     for termo in JARGAO:
         n = corpo.count(termo)
         if n:
             achou.append(f"jargao no corpo do parecer: {termo!r} ({n}x) — a "
                          f"SKILL promete texto para quem nao le codigo")
+    return achou
+
+
+# Teto de tamanho nos campos de prosa livre. Sao os unicos que o modelo escreve
+# por extenso, e sao por onde o documento volta a inchar: o veredito do caso 03
+# saiu com 62 palavras numa frase so, emendando quatro oracoes com travessao e
+# ponto e virgula. O padrao de escrita do projeto pede uma ideia por frase.
+TETO = {"veredito": 40, "agora": 30, "passado": 30}
+TETO_ESC = 25
+
+
+def palavras(s):
+    return len([w for w in re.split(r"\s+", s.strip()) if w])
+
+
+def conferir_concisao(d):
+    """Os campos de prosa cabem numa frase curta, sem oracao emendada."""
+    achou = []
+    for campo in ("veredito", "agora", "passado"):
+        s = (d.get(campo) or "").strip()
+        if not s:
+            continue
+        n = palavras(s)
+        if n > TETO[campo]:
+            achou.append(f"`{campo}` com {n} palavras, teto {TETO[campo]} — "
+                         f"o campo e para frase curta")
+        for sinal, nome in ((";", "ponto e virgula"), ("—", "travessao")):
+            if sinal in s:
+                achou.append(f"`{campo}` usa {nome}, que emenda oracao onde "
+                             f"cabe ponto final")
+    for i, e in enumerate(d.get("esc") or []):
+        n = palavras(e[0] if isinstance(e, (list, tuple)) else str(e))
+        if n > TETO_ESC:
+            achou.append(f"`esc[{i}]` com {n} palavras, teto {TETO_ESC}")
     return achou
 
 
@@ -202,6 +240,7 @@ def validar_json(caminho, sev, conf, catalogo=None):
     elif not ver[:9].lower().startswith(("não", "nao", "sim", "depende")):
         problemas.append(f"veredito nao comeca por Nao, Sim ou Depende: "
                          f"{ver[:40]!r}")
+    problemas += conferir_concisao(d)
 
     if d["alc"] not in ALCANCE:
         problemas.append(f"alcance fora do vocabulario: {d['alc']!r}")

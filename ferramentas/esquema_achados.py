@@ -88,9 +88,8 @@ EXEMPLO = {
                 "o consultório nem o paciente.",
     "agora": "pare de enviar áudio com nome de paciente para a conta pessoal e "
              "desligue o uso dos seus dados para treino nas configurações.",
-    "passado": "apague o histórico da conversa na conta pessoal e os áudios "
-               "guardados no celular; o que já foi para o prontuário fica, "
-               "porque prontuário não se apaga.",
+    "passado": "apague o histórico da conversa e os áudios guardados no "
+               "celular. O que já foi para o prontuário fica.",
     "a": [["G02", "D", "C", None, "voce"],
           ["G18", "D", "C", None, "fornecedor"],
           ["G51", "A", "P", None, "voce"],

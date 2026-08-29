@@ -193,6 +193,10 @@ python3 ${CLAUDE_PLUGIN_ROOT}/ferramentas/gatilhos.py --tsv --secao <seção>...
 diretriz: os ids de `Base` são compartilhados, então filtrar por arquivo elegível
 não filtra nada.
 
+E o que vale para carregar vale para julgar: **`afast` afasta arquivo de
+diretriz, não linha de catálogo**. Gatilho cuja `Base` cita arquivo afastado
+continua valendo se o padrão estiver no material.
+
 A coluna `norma` do TSV diz de que norma o gatilho decorre quando isso muda o
 regime. A Res. CFM 2.454/2026 está em vigor desde 26/08/2026 — é exigência
 corrente, não futura. Não acrescente ressalva de vigência aos achados; o parecer
@@ -222,6 +226,17 @@ ANVISA/SaMD, EU AI Act — entra em `fora`, com o nome do assunto e nada mais.
 Percorra as linhas do TSV contra o material. Cada linha é uma pergunta fechada:
 **este padrão está presente?**
 
+O TSV traz o mesmo padrão em duas colunas. `gatilho` é o que se procura num
+repositório — `logging.info(request.json)`, `cpf`, `.env`. `efeito` é o mesmo
+padrão dito sem jargão, e é a forma que casa com material em prosa. Quando as
+duas leituras divergirem, **vale a mais ampla**: é ela que o parecer entrega.
+
+Isso foi medido. O G01 diz `payload serializado do registro, sem seleção de
+campos`, e casa 11 de 11 vezes num caso com código e 2 de 14 num caso em que o
+material é um arquivo de áudio — que não tem campo a selecionar. O `efeito` dele
+diz `o registro inteiro do paciente é enviado ao fornecedor, não só o que a
+tarefa precisa`, e descreve o áudio inteiro sem esforço.
+
 **Com repositório.** `Grep` e `Glob` sobre os padrões observáveis da coluna
 `gatilho` — nomes de campo, chamadas de API, `.env`, logging de payload, região
 de endpoint. Achado é `O`, com `arquivo:linha`.
@@ -231,6 +246,10 @@ Afirma → `D`. Nega → sem achado. Omite → `A`, e vira pergunta.
 
 Um gatilho dispara **no máximo uma vez**. Se o padrão aparece em três lugares do
 código, é um achado com a evidência mais forte, não três.
+
+A recíproca não vale: **uma evidência pode sustentar mais de um gatilho**. A
+mesma linha responde a perguntas diferentes, e responder a uma não dispensa a
+outra. A regra acima é por gatilho, não por linha.
 
 Só quando a diretriz precisar decidir escalonamento:
 
@@ -249,9 +268,9 @@ Grave **um arquivo**, no caminho confirmado na triagem. Só variáveis:
 
 ```json
 {"p":"transcrição de consulta por ChatGPT em consultório de cardiologia",
- "veredito":"Não, do jeito que está hoje. O áudio da consulta vai para uma conta pessoal de consumidor, sem contrato que proteja o consultório nem o paciente.",
+ "veredito":"Não, do jeito que está hoje. O áudio da consulta vai para conta pessoal de consumidor, sem contrato que proteja o consultório nem o paciente.",
  "agora":"pare de enviar áudio com nome de paciente para a conta pessoal.",
- "passado":"apague o histórico da conversa e os áudios no celular; o que já foi ao prontuário fica.",
+ "passado":"apague o histórico da conversa e os áudios no celular. O que já foi ao prontuário fica.",
  "alc":"D",
  "tri":{"mat":"P","dado":"ID","papel":"GTC","dec":false,"mod":"PRES","est":"PROD",
         "forn":"OpenAI ChatGPT, plano pessoal; região não declarada"},
@@ -292,10 +311,34 @@ Escolha pelo que o material disse sobre o serviço, não pelo caso ideal. Consul
 de uma sala não estende certificação de prontuário eletrônico: isso é `fora`, e
 dizer `voce` faz a pessoa não fazer nada.
 
-**`veredito` responde a pergunta que foi feita**, numa frase, começando por Não,
-Sim ou Depende. `agora` é o que parar ou fazer hoje. `passado` só quando o
-material disser que já há uso com paciente real — o que fazer com o histórico, as
-gravações e o que já entrou no prontuário.
+**`veredito` responde a pergunta que foi feita**, começando por Não, Sim ou
+Depende. `agora` é o que parar ou fazer hoje. `passado` só quando o material
+disser que já há uso com paciente real: o que fazer com o histórico, as gravações
+e o que já entrou no prontuário.
+
+Tetos de tamanho, conferidos pelo `validar_parecer.py`:
+
+| campo | teto |
+|---|---|
+| `veredito` | 40 palavras |
+| `agora` | 30 palavras |
+| `passado` | 30 palavras |
+| cada item de `esc` | 25 palavras |
+
+Nesses campos, uma ideia por frase e ordem direta. **Ponto e vírgula e travessão
+são recusados**: são o mecanismo por onde a frase cresce. O veredito de um caso
+saiu com 62 palavras numa oração só, emendada por travessão e ponto e vírgula
+quatro vezes. Se a ideia não couber, use duas frases.
+
+Fora também: contraposição retórica na forma "não é X, é Y", frase de efeito,
+superlativo sem medida, e comentário sobre o próprio documento.
+
+**Os campos livres saem no corpo do parecer**, e a regra de vocabulário vale
+neles: `p`, `forn`, `veredito`, `agora`, `passado` e `esc`. Nada de `endpoint`,
+`payload`, `dataset`, `opt-out`, `BAA`, `NGS2`. Escreva o que o termo quer dizer:
+`endpoint e região não informados` vira `nem o serviço contratado nem a região
+foram informados`. O `validar_parecer.py` reprova o parecer que traga qualquer
+termo da lista, e não distingue de que campo ele veio.
 
 Escreva compacto, sem indentação. Não há campo de texto livre além de `p`,
 `forn`, o item de `esc` e o assunto em `fora`.

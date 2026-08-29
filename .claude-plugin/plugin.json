@@ -1,6 +1,6 @@
 {
   "name": "claude-para-saude",
-  "version": "0.1.28",
+  "version": "0.1.34",
   "description": "Avaliação de conformidade de projetos de IA e LLM com dados de saúde no Brasil, contra corpus normativo verificado em fonte primária.",
   "author": {
     "name": "Stefano Garzon"
