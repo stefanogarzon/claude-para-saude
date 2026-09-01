@@ -5,6 +5,51 @@ data de verificação própria, registrada em `corpus/VERSAO.md` no campo
 `corpus_verificado_em` — ela não muda a cada versão do plugin, e é ela que conta
 para decidir se a norma citada ainda vale.
 
+## v0.1.36 — 2026-09-01
+
+A fase 3 passou a enxergar gatilho que lhe escapava, e a skill passou a avisar
+sobre dado de paciente antes de pedir o material.
+
+- **Aviso antes de tudo.** A skill pedia "o material a avaliar" e nunca dizia
+  para não colar prontuário, evolução, laudo, exame ou áudio de paciente real.
+  O catálogo dela trata caso real em prompt de exemplo como impeditivo, com base
+  no art. 75 do Código de Ética Médica e no art. 154 do Código Penal — a
+  ferramenta disparava o próprio gatilho. O aviso agora abre a triagem, e está
+  também no README, antes das linhas de instalação.
+- **O classificador passou a ver a tradução.** O catálogo tem duas colunas para
+  o mesmo padrão: uma em vocabulário de busca, que casa com repositório, e outra
+  em português direto, que casa com descrição em prosa. Só a primeira chegava à
+  classificação. Medido: um gatilho sobre envio do registro inteiro ao fornecedor
+  disparava em 11 de 11 execuções num caso com código e em 2 de 14 num caso em
+  que o material era um arquivo de áudio.
+- **Trinta traduções novas** no catálogo, de 27 para 57 das 86 linhas. Saíram
+  `índice vetorial`, `system prompt`, `runbook`, `criptografia em repouso`,
+  `roteamento automático` do que o médico lê.
+- **Um gatilho deixou de dizer `por chatbot`** e passou a dizer `canal
+  automático — chatbot, e-mail, portal`. A norma que o sustenta não fala em
+  chatbot, e a palavra estreita fazia o achado passar batido quando o resultado
+  ia ao paciente por e-mail.
+- **O parecer declara a composição.** A abertura da lista de achados passou a
+  separar o que está confirmado pelo material do que depende de informação que
+  ninguém deu, antes de separar por peso. Num caso com repositório são 18
+  confirmados e 22 perguntas, e a leitura anterior somava os dois em 40
+  exigências.
+
+Medido em 36 execuções, quatro casos e três modelos, contra uma referência
+construída à mão: o recall no caso com repositório foi de 11/13 para 13/13 nas
+três execuções, com zero falso positivo. O parecer desse caso ficou 24% maior, e
+o crescimento é de pergunta, não de acusação.
+
+**Corpus.** A ficha de provedores de LLM foi reverificada em 01/09, antes desta
+distribuição, como o processo exige. Duas citações da OpenAI estavam truncadas e
+foram corrigidas: uma omitia a exceção que abre o prazo de 30 dias do ChatGPT
+Business, outra omitia a finalidade de monitoramento de abuso na API. Anthropic e
+Google conferem palavra por palavra.
+
+**Versões sem entrada.** As v0.1.32 a v0.1.35 são etapas desta, e as tags do
+repositório pararam na v0.1.25 — a v0.1.28, a v0.1.31 e a v0.1.34 saíram sem
+marcação. A v0.1.36 volta a ser marcada.
+
 ## v0.1.31 — 2026-08-29
 
 O parecer encolheu de 11% a 26%, e de 15% a 17% por achado nos três casos com

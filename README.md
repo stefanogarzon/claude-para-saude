@@ -22,6 +22,17 @@ A skill não redige norma nem mitigação: ela classifica o projeto dentro de um
 catálogo de 86 padrões de risco. O texto normativo não passa pelo modelo — sai
 do corpus pelo identificador do dispositivo.
 
+## Antes de usar
+
+**Não cole prontuário, evolução, laudo, exame nem áudio de paciente real.** A
+avaliação precisa da descrição do serviço — o que entra, para onde vai, quem
+revisa —, e não do dado. Se o material for um repositório, o código entra; dado
+de paciente dentro dele, não.
+
+O catálogo desta skill trata caso real em prompt de exemplo como impeditivo, com
+base no art. 75 do Código de Ética Médica e no art. 154 do Código Penal. Vale
+para ela também.
+
 ## Instalação
 
 ```

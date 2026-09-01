@@ -126,6 +126,23 @@ partir de **26/08/2026**. Compare com a data de hoje:
 
 ## Fase 1 — triagem (gate)
 
+**Antes de qualquer coisa, diga isto ao usuário, com estas palavras ou
+equivalentes:**
+
+> Para avaliar, eu preciso da descrição do serviço — o que entra, para onde vai,
+> quem revisa. **Não cole prontuário, evolução, laudo, exame nem áudio de
+> paciente real.** Nada disso é necessário para o parecer, e colar aqui é o
+> mesmo padrão que o catálogo trata como impeditivo. Se o material for um
+> repositório, o código entra; dado de paciente dentro dele, não.
+
+Isto não é formalidade. O catálogo desta skill tem o G65 — *"prompt de exemplo,
+issue, wiki ou captura de tela com caso real"* — como `bloqueante`, com base no
+art. 75 do Código de Ética Médica e no art. 154 do Código Penal. Uma ferramenta
+de conformidade que recebe prontuário real sem avisar dispara o próprio gatilho.
+
+Se o usuário já tiver colado dado de paciente antes do aviso, diga isso, siga a
+avaliação com o que serve, e registre em `esc` para o responsável técnico.
+
 **Não prossiga sem completar esta fase.** A triagem determina quais diretrizes
 serão carregadas; errar aqui aplica o arcabouço errado ao caso inteiro.
 

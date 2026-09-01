@@ -1,24 +1,25 @@
 ---
 tipo: versao do distribuivel
-construido: 2026-08-29
+construido: 2026-09-01
 corpus_verificado_em: 2026-08-11
-plugin_version: 0.1.34
-dist_hash: f2304c37971265dc
+corpus_verificado_ate: 2026-09-01
+plugin_version: 0.1.36
+dist_hash: 57664304ffe79802
 ---
 
 # Versao do distribuivel
 
-27 arquivos de corpus · 8 de skill · LICENSE e README · 215 dispositivos citaveis · plugin v0.1.34.
+27 arquivos de corpus · 8 de skill · LICENSE e README · 215 dispositivos citaveis · plugin v0.1.36.
 
-**Norma conferida em fonte primaria em 2026-08-11**. Esta e a data que o parecer cita, e a unica que interessa a quem decide com ele. `construido:` acima e a data em que o artefato foi montado, e nao diz nada sobre a idade da norma.
+**Norma conferida em fonte primaria em 2026-08-11** a 2026-09-01. Esta e a data que o parecer cita, e a unica que interessa a quem decide com ele. `construido:` acima e a data em que o artefato foi montado, e nao diz nada sobre a idade da norma.
 
 Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` nem `skills/` neste repositorio — a fonte de verdade e o corpus editorial e `plugin-src/`, e estes diretorios sao sobrescritos a cada build.
 
 | Arquivo | sha256 (16) |
 |---|---|
-| `CHANGELOG.md` | `96001d7ae4119bd2` |
+| `CHANGELOG.md` | `7168261705151a2f` |
 | `LICENSE` | `77e0da50f71f3406` |
-| `README.md` | `29c27ec65d90fefc` |
+| `README.md` | `c76d69923faa6cb8` |
 | `decisoes.md` | `c27e5feeb0d6a906` |
 | `diretrizes/00-decisoes.md` | `c27e5feeb0d6a906` |
 | `diretrizes/00-formato.md` | `feb991e5a99e4597` |
@@ -35,7 +36,7 @@ Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` nem `skil
 | `ferramentas/diretriz.py` | `87340eaebfbe89f9` |
 | `ferramentas/esquema_achados.py` | `0c750f89693e155c` |
 | `ferramentas/gatilhos.py` | `76ee362895f0eeb6` |
-| `ferramentas/render_parecer.py` | `2237a82a4954e154` |
+| `ferramentas/render_parecer.py` | `f1fc1bb743d897e6` |
 | `ferramentas/validar_parecer.py` | `e6aed4995ea8e9a2` |
 | `fichas/00-esquema.md` | `02592c59cefa8ad9` |
 | `fichas/00-indice.md` | `c1f6261c9363383e` |
@@ -50,5 +51,5 @@ Gerado por `ferramentas/build_plugin.py`. Nao edite nada sob `corpus/` nem `skil
 | `fichas/09-penal.md` | `e33d58c1a4e8b6d1` |
 | `fichas/10-civil-consumo-mci.md` | `beacd14305a21978` |
 | `fichas/11-seguranca-tecnica.md` | `045df786ea10be11` |
-| `fichas/12-provedores-llm.md` | `2fcd10da847d88db` |
-| `skills/avaliar-conformidade/SKILL.md` | `fad19f36321a7fdc` |
+| `fichas/12-provedores-llm.md` | `b19d5d953b009d7c` |
+| `skills/avaliar-conformidade/SKILL.md` | `846b2fd9a7327878` |

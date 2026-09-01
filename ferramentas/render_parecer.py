@@ -269,9 +269,16 @@ def render(d, cat, corpus, verif, pver, hoje, vigente):
     L.append("## 2. Achados e ações\n")
     n_b = sum(1 for a in achados if a["g"]["severidade"].startswith("bloqueante"))
     n_p = sum(1 for a in achados if a["sit"] == "P")
-    L.append("%d achados: %d impeditivos, %d de risco. Em %d falta informação, "
-             "e a ação começa por checar.\n"
-             % (len(achados), n_b, len(achados) - n_b, n_p))
+    # A divisao primaria e confirmado contra depende-de-informacao, e nao o peso.
+    # Com a fase 3 enxergando o que lhe escapava, um caso com repositorio passou
+    # de 29 para 36 achados — e 22 deles sao pergunta. Aberto pelo peso, o leitor
+    # le 36 exigencias; aberto pela situacao, le 14 e uma lista do que falta
+    # informar.
+    n_c = len(achados) - n_p
+    L.append("%d pontos a tratar: **%d confirmados** pelo material e **%d que "
+             "dependem de informação** que ninguém deu ainda. Por peso: %d "
+             "impeditivos, %d de risco.\n"
+             % (len(achados), n_c, n_p, n_b, len(achados) - n_b))
 
     # `vistos` atravessa os quatro blocos: a ementa de um dispositivo sai na
     # primeira linha que o cita, e nas seguintes sai so a citacao.

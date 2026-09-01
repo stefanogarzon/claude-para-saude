@@ -1,22 +1,23 @@
 ---
 tema: Políticas de retenção e de treinamento dos provedores de LLM
-ementa: Estado declarado das políticas de Anthropic, OpenAI e Google, verificado em 2026-08-11
+ementa: Estado declarado das políticas de Anthropic, OpenAI e Google, reverificado em 2026-09-01
 status: informativo e contratual; não normativo
 meia_vida: curta
 aviso: >-
   Reverificar cada URL antes de qualquer uso, publicação ou decisão de arquitetura.
-  Datas declaradas pelas próprias páginas: Anthropic treino 16/03/2026, Anthropic ZDR
-  09/06/2026, Anthropic consumidor e BAA 01/07/2026, OpenAI privacidade corporativa
-  08/01/2026, Google HIPAA 11/08/2026, Google abuse monitoring e ZDR 07/08/2026;
-  termos da Gemini API com effective date de 23/03/2026.
+  Datas declaradas pelas próprias páginas em 01/09/2026: Anthropic treino sem data
+  absoluta, só relativa; Anthropic ZDR 09/06/2026; Anthropic consumidor e BAA
+  01/07/2026; OpenAI privacidade corporativa 08/01/2026; Google HIPAA 28/08/2026;
+  Google abuse monitoring e ZDR 31/08/2026; termos da Gemini API com effective date
+  de 23/03/2026.
   Política de provedor não é norma e muda sem aviso.
-verificado: 2026-08-11
+verificado: 2026-09-01
 fonte: cada afirmação traz a URL da página oficial no campo Literal
 ---
 
 # Provedores de LLM — retenção e treinamento
 
-> **Aviso de reverificação.** Esta ficha tem meia-vida curta. Cada linha foi verificada na página oficial em 2026-08-11, e a data de atualização declarada pela própria página está registrada em cada item. Nenhum item desta ficha deve ser citado, publicado ou usado como base de decisão sem reabrir a URL correspondente e conferir a data. Política de provedor é compromisso contratual revogável, não controle técnico.
+> **Aviso de reverificação.** Esta ficha tem meia-vida curta. Cada linha foi verificada na página oficial em 2026-08-11 e reverificada em 2026-09-01, e a data de atualização declarada pela própria página está registrada em cada item. Nenhum item desta ficha deve ser citado, publicado ou usado como base de decisão sem reabrir a URL correspondente e conferir a data. Política de provedor é compromisso contratual revogável, não controle técnico.
 
 | Página | Data declarada pela própria página |
 |---|---|
@@ -41,7 +42,7 @@ Itens: 5. Marcações `NÃO VERIFICADO` consolidadas ao final.
 
 **Literal.**
 
-*Treino em produtos comerciais.* https://privacy.claude.com/en/articles/7996868-is-my-data-used-for-model-training — verificado em 2026-08-11; a página declara "Last updated: March 16, 2026".
+*Treino em produtos comerciais.* https://privacy.claude.com/en/articles/7996868-is-my-data-used-for-model-training — verificado em 2026-08-11, reverificado em 2026-09-01; nesta data a página não declara mais data absoluta, só "Updated over 2 weeks ago". O texto conferido não mudou.
 > "By default, we will not use your inputs or outputs from our commercial products to train our models"
 
 A página exemplifica o alcance de "commercial products" assim, verbatim: "(e.g. Claude for Work, Anthropic API, Claude Gov, etc.)". Exceção declarada: feedback explícito (👍/👎) faz a conversa inteira ser armazenada por até 5 anos, deslinkada de user ID e customer ID, com possibilidade de uso em treino. Dado de conector (Google Drive, MCP) está excluído, salvo se copiado para o chat. Desligamento: Claude for Work → Organization settings → Data and Privacy → "Rate chats"; Workbench → Settings → Privacy, por administrador.
@@ -156,8 +157,8 @@ A elegibilidade sob BAA não resolve a LGPD. Continua sendo necessário: base le
 
 Abrange ChatGPT Business, Enterprise, Healthcare, Edu, Teachers e a API Platform. Exceção: opt-in explícito em mecanismos de feedback.
 - ChatGPT Enterprise, Edu e Healthcare, verbatim: "Your workspace admins control how long your data is retained. Any deleted conversations are removed from our systems within 30 days, unless we are legally required to retain them."
-- ChatGPT Business, verbatim: "Any deleted or unsaved conversations are removed from our systems within 30 days."
-- API Platform, verbatim: "OpenAI may securely retain API inputs and outputs for up to 30 days to provide the services" e "You can also request zero data retention (ZDR) for eligible endpoints if you have a qualifying use-case".
+- ChatGPT Business, verbatim: "Any deleted or unsaved conversations are removed from our systems within 30 days, unless longer retention is required by law, or is reasonably necessary to protect our services or any third party from harm."
+- API Platform, verbatim: "OpenAI may securely retain API inputs and outputs for up to 30 days to provide the services and to identify abuse. After 30 days, API inputs and outputs are removed from our systems, unless we are legally required to retain them." E: "You can also request zero data retention (ZDR) for eligible endpoints if you have a qualifying use-case".
 - DPA disponível para Business, Enterprise e API. ChatGPT Edu e Teachers usam Student Data Privacy Agreement, e não DPA.
 - BAA, em seção de FAQ da API Platform, verbatim: "We are able to sign Business Associate Agreements (BAA) in support of customers' compliance with [HIPAA]".
 
@@ -179,7 +180,9 @@ Abrange ChatGPT Business, Enterprise, Healthcare, Edu, Teachers e a API Platform
 - Residual: a OpenAI ainda deve guardar de forma segura dado limitado de usuários do período de abril a setembro de 2025, acessível apenas a equipe jurídica e de segurança restrita.
 - Prática restabelecida: conversas deletadas e Temporary Chats removidas em até 30 dias; dado de API deletado em 30 dias.
 
-**Fonte.** https://openai.com/enterprise-privacy/ · https://developers.openai.com/api/docs/guides/your-data · https://openai.com/index/response-to-nyt-data-demands/ · verificado em 2026-08-11
+**Nota de texto.** Reverificação de 2026-09-01 encontrou duas citações truncadas neste item, ambas corrigidas acima. A do ChatGPT Business omitia a oração final — "unless longer retention is required by law, or is reasonably necessary to protect our services or any third party from harm" —, o que fazia o prazo de 30 dias parecer incondicional. A da API Platform omitia "and to identify abuse" e a frase seguinte, deixando de fora a finalidade de monitoramento de abuso, que é justamente o objeto do gatilho G07. Não foi possível determinar se a página mudou ou se a transcrição original já saiu truncada; em qualquer dos casos o texto acima é o da página em 01/09/2026.
+
+**Fonte.** https://openai.com/enterprise-privacy/ · https://developers.openai.com/api/docs/guides/your-data · https://openai.com/index/response-to-nyt-data-demands/ · verificado em 2026-08-11, reverificado em 2026-09-01
 
 **Confiança.** primária-conferida
 
@@ -220,7 +223,7 @@ O ZDR é por endpoint, não por conta. Ficam fora da lista de elegíveis os endp
 - Critério de enquadramento, verbatim: "Your access to Google AI Studio is a 'Paid Service' even when it is offered free of charge, as long as the account you are using to access Google AI Studio has access to a Cloud Project with an associated and active Cloud Billing account or is a Workspace enterprise account. Your access to Gemini API is a 'Paid Service' only when accessing the API through a Cloud Project associated with an active billing account."
 - Exceção geográfica, verbatim: "If you're in the European Economic Area, Switzerland, or the United Kingdom, the terms under 'How Google uses Your Data' in 'Paid Services' apply to all Services, including Google AI Studio and unpaid quota in the Gemini API, even though they are offered free of charge." Não há exceção equivalente para o Brasil.
 
-*Gemini Enterprise Agent Platform — abuse monitoring.* https://docs.cloud.google.com/vertex-ai/generative-ai/docs/learn/abuse-monitoring — verificado em 2026-08-11; a página declara "Last updated 2026-08-07 UTC".
+*Gemini Enterprise Agent Platform — abuse monitoring.* https://docs.cloud.google.com/vertex-ai/generative-ai/docs/learn/abuse-monitoring — verificado em 2026-08-11, reverificado em 2026-09-01; a página passou a declarar "Last updated 2026-08-31 UTC", e o texto conferido não mudou.
 - Dado de abuse monitoring armazenado por até 90 dias, na mesma região ou multi-região do projeto, para prompts sinalizados por classificador.
 > "Authorized Google employees may assess the flagged prompts"
 - Isenção por padrão, verbatim: "Customers in scope: Only customers whose use of Google Cloud is governed by the Google Cloud Platform Terms of Service. This means that customers with a Google Cloud Master Agreement are exempt from prompt logging for this abuse monitoring by default."
@@ -230,7 +233,7 @@ O ZDR é por endpoint, não por conta. Ficam fora da lista de elegíveis os endp
 - Chaves gerenciadas pelo cliente, verbatim, nos dois regimes: "Prompt logs for the purposes of abuse monitoring are not encrypted by Customer-managed encryption keys (CMEK)."
 - Explicitamente não usado para treino nem para fine-tuning.
 
-*Gemini Enterprise Agent Platform — data governance e ZDR.* https://docs.cloud.google.com/gemini-enterprise-agent-platform/resources/zero-data-retention — verificado em 2026-08-11; a página declara "Last updated 2026-08-07 UTC". As URLs `cloud.google.com/vertex-ai/generative-ai/docs/data-governance` e a versão em `docs.cloud.google.com` retornam HTTP 200 e redirecionam para esta página.
+*Gemini Enterprise Agent Platform — data governance e ZDR.* https://docs.cloud.google.com/gemini-enterprise-agent-platform/resources/zero-data-retention — verificado em 2026-08-11, reverificado em 2026-09-01; a página passou a declarar "Last updated 2026-08-31 UTC", e o texto conferido não mudou. As URLs `cloud.google.com/vertex-ai/generative-ai/docs/data-governance` e a versão em `docs.cloud.google.com` retornam HTTP 200 e redirecionam para esta página.
 - Treino, verbatim: "As outlined in 'Training Restriction' in the Service Terms section of the Service Specific Terms, Google won't use your data to train or fine-tune any AI/ML models without your prior permission or instruction. This applies to all managed models on Gemini Enterprise Agent Platform, including GA and pre-GA models."
 - Cache, verbatim: "By default, Google's published Gemini models cache Customer Data (inputs, outputs, and derived data) in-memory to reduce latency [...] is stored only in-memory (not at-rest), is isolated at the project level, and has a 24-hour TTL". O cache pode ser desligado por projeto.
 - Interactions API, verbatim: "When using the Interactions API with `store = true`, Google stores user data (such as prompts, responses, and conversation state) [...] If you do not specify a value for `store`, it defaults to `true` for all models. To achieve zero data retention, explicitly set `store = false`."
@@ -240,7 +243,7 @@ O ZDR é por endpoint, não por conta. Ficam fora da lista de elegíveis os endp
 
 *Mudança de nome do produto.* A documentação de IA generativa do Vertex AI foi migrada para "Gemini Enterprise Agent Platform". A lista de Covered Products do BAA traz "Gemini Enterprise Agent Platform" e "Generative AI on Gemini Enterprise Agent Platform", e não traz "Vertex AI" como produto — apenas "Vertex AI Workbench instances".
 
-*HIPAA e BAA no Google Cloud.* https://cloud.google.com/security/compliance/hipaa — a página declara "Last updated 2026-08-11 UTC"; verificada em 2026-08-11.
+*HIPAA e BAA no Google Cloud.* https://cloud.google.com/security/compliance/hipaa — verificada em 2026-08-11, reverificada em 2026-09-01; a página passou a declarar "Last updated 2026-08-28 UTC", e o texto conferido não mudou, inclusive a ausência de "Vertex AI" na lista de Covered Products.
 - "Google will enter into Business Associate Agreements with customers as necessary under HIPAA". Execução via https://support.google.com/cloud/answer/6329727.
 - Ressalva declarada: não existe certificação de HIPAA reconhecida pelo HHS; a conformidade é responsabilidade compartilhada.
 - Produtos de IA relevantes na lista de Covered Products: Vertex AI Workbench instances; AI Platform Training and Prediction; Gemini Code Assist; Gemini Enterprise; Gemini Enterprise Agent Platform; Generative AI on Gemini Enterprise Agent Platform; Gemini in BigQuery; Gemini in Colab Enterprise; Gemini Notebook Enterprise. Também constam Cloud Healthcare API, Healthcare Data Engine e Cloud KMS.
